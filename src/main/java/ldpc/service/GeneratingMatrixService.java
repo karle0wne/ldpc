@@ -19,7 +19,7 @@ public class GeneratingMatrixService {
         //TODO @e.kazakov, здесь логика для заполнения порождающей матрицы (booleanGeneratingMatrix), это твоя задача
         /*
         * 1. уберешь эти комментарии
-        * 2. заменишь логикой получения порождающей матрицы из */
+        * 2. заменишь логикой получения порождающей матрицы из мппч матрицы*/
 
 
         return new GeneratingMatrix(booleanGeneratingMatrix);
