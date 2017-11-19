@@ -18,6 +18,7 @@ public class GeneratingMatrixService {
         BooleanMatrix booleanGeneratingMatrix = new BooleanMatrix(new ArrayList<List<Boolean>>());
         //TODO @e.kazakov, здесь логика для заполнения порождающей матрицы (booleanGeneratingMatrix), это твоя задача
         /*
+        * 0. я сделал вики, Егор, пожалуйста обязательно ознакомься
         * 1. уберешь эти комментарии
         * 2. заменишь логикой получения порождающей матрицы из мппч матрицы*/
 
