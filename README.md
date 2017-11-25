@@ -1,45 +1,64 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+# LDPC project
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+[![pb.png](https://bitbucket.org/repo/7EgkgLG/images/3909742634-pb.png)](http://ag-solutions.ru/)
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+# Последнее обновление
 
----
+  - отрефакторен весь проект
+  - добавлены новые зависимости в проект
+  - добавлены функции траснпонирования матрицы и перемножения
+  - также добавлен дополнительный функционал для работы с матрицами
+  - подготовлены тестовые матрицы
+  - развернут стенд для демонстрации цепочки кодирования\декодирования
 
-## Edit a file
+### Использование
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+Что бы воспользоваться программой, необходимо открыть файл *MainApplicationTest* в *IDEA* а нажать кнопочку запустить :)
+```java
+BooleanMatrix informationWord = booleanMatrixService.createPrepared2InformationWord();
+        System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
+        booleanMatrixService.print(informationWord);
+        System.out.println("---------------");
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+        GeneratingMatrix generatingMatrix = generatingMatrixService.createPrepared2GeneratingMatrix();
+        System.out.println("ПОРОЖДАЮЩАЯ МАТРИЦА:");
+        booleanMatrixService.print(generatingMatrix.getBooleanMatrix());
+        System.out.println("---------------");
 
----
+        ParityCheckMatrix parityCheckMatrix = parityCheckMatrixService.createPrepared2ParityCheckMatrix();
+        System.out.println("ПРОВЕРОЧНАЯ МАТРИЦА:");
+        booleanMatrixService.print(parityCheckMatrix.getBooleanMatrix());
+        System.out.println("---------------");
 
-## Create a file
+        System.out.println("ПОЛУЧЕНИЕ КОДОВОГО СЛОВА");
+        BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
+        System.out.println("---------------");
 
-Next, you’ll add a new file to this repository.
+        System.out.println("КОДОВОЕ СЛОВО: ");
+        booleanMatrixService.print(codeWord);
+        System.out.println("---------------");
 
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
+        System.out.println("ТИПА ПЕРЕДАЧА ПО КАНАЛУ!");
+        System.out.println("---------------");
 
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+        System.out.println("ТРАНСПОНИРОВАНИЕ ПОЛУЧЕННОГО СООБЩЕНИЯ");
+        BooleanMatrix transposedCodeWord = booleanMatrixService.getTransposedBooleanMatrix(codeWord);
+        System.out.println("---------------");
 
----
+        System.out.println("ПОЛУЧЕНИЕ СИНДРОМА");
+        BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), transposedCodeWord);
+        System.out.println("---------------");
 
-## Clone a repository
+        System.out.println("СИНДРОМ: ");
+        booleanMatrixService.print(syndrome);
+        System.out.println("---------------");
+```
 
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
+Здесь реализована вся цепочка простейшего кодирования\декодирования, при этом используются готовые: 
+  - *G*
+  - *H*
+  - *информационное слово*
 
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
+# Дальнейший план действий
 
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+Свести задачу к заданию только *H* и *информационного слова* без *G*
