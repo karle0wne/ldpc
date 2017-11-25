@@ -1,11 +1,13 @@
-package ldpc.entity;
+package ldpc.matrix.wrapper.paritycheck.wrapper;
+
+import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 
 /**
  * Проверочная матрица с малой плотностью проверок на четность
  */
 public class LowDensityParityCheckMatrix {
 
-    private BooleanMatrix booleanMatrix;
+    private ParityCheckMatrix booleanMatrix;
     private int K;
     private int J;
     private int G;
@@ -16,42 +18,26 @@ public class LowDensityParityCheckMatrix {
      * @param J             количество единиц в каждом столбце
      * @param G             обхват графа
      */
-    public LowDensityParityCheckMatrix(BooleanMatrix booleanMatrix, int K, int J, int G) {
+    public LowDensityParityCheckMatrix(ParityCheckMatrix booleanMatrix, int K, int J, int G) {
         this.booleanMatrix = booleanMatrix;
         this.K = K;
         this.J = J;
         this.G = G;
     }
 
-    public BooleanMatrix getBooleanMatrix() {
+    public ParityCheckMatrix getBooleanMatrix() {
         return booleanMatrix;
-    }
-
-    public void setBooleanMatrix(BooleanMatrix booleanMatrix) {
-        this.booleanMatrix = booleanMatrix;
     }
 
     public int getK() {
         return K;
     }
 
-    public void setK(int k) {
-        K = k;
-    }
-
     public int getJ() {
         return J;
     }
 
-    public void setJ(int j) {
-        J = j;
-    }
-
     public int getG() {
         return G;
-    }
-
-    public void setG(int g) {
-        G = g;
     }
 }
