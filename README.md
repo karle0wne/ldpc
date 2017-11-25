@@ -55,6 +55,7 @@ BooleanMatrix informationWord = booleanMatrixService.createPrepared2InformationW
 ```
 
 Здесь реализована вся цепочка простейшего кодирования\декодирования, при этом используются готовые: 
+
   - *G*
   - *H*
   - *информационное слово*
