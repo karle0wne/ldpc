@@ -1,4 +1,6 @@
-package ldpc.entity;
+package ldpc.matrix.wrapper.generating;
+
+import ldpc.matrix.basis.BooleanMatrix;
 
 /**
  * Порождающая матрица
@@ -13,9 +15,5 @@ public class GeneratingMatrix {
 
     public BooleanMatrix getBooleanMatrix() {
         return booleanMatrix;
-    }
-
-    public void setBooleanMatrix(BooleanMatrix booleanMatrix) {
-        this.booleanMatrix = booleanMatrix;
     }
 }

@@ -1,4 +1,7 @@
-package ldpc.entity;
+package ldpc.matrix;
+
+import ldpc.matrix.wrapper.generating.GeneratingMatrix;
+import ldpc.matrix.wrapper.paritycheck.wrapper.LowDensityParityCheckMatrix;
 
 /**
  * А это у нас будет пара порождающая-проверочная матрицы
