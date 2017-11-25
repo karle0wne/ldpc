@@ -1,10 +1,10 @@
 package ldpc.service.basis;
 
-import com.sun.istack.internal.NotNull;
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.basis.Column;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
