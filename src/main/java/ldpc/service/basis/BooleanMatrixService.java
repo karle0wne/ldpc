@@ -1,12 +1,12 @@
 package ldpc.service.basis;
 
-import com.sun.istack.internal.NotNull;
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.basis.Column;
 import ldpc.matrix.basis.Row;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
