@@ -34,6 +34,18 @@ public class BooleanMatrixService {
         this.columnService = columnService;
     }
 
+    public long getCountEmptyRows(BooleanMatrix booleanMatrix) {
+        return booleanMatrix.getMatrix().stream()
+                .filter(row -> {
+                    List<Boolean> falseElements = row.getElements().stream()
+                            .filter(element -> !element)
+                            .collect(Collectors.toList());
+
+                    return (falseElements.size() == row.getElements().size());
+                })
+                .count();
+    }
+
     public BooleanMatrix createIdentityMatrix(int N) {
         List<Row> rows = IntStream.range(0, N)
                 .mapToObj(i -> new Row(new ArrayList<>(Collections.nCopies(N, false))))

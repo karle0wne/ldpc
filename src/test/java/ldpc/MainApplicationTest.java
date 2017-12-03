@@ -28,112 +28,97 @@ public class MainApplicationTest {
     @Test
     public void test() {
         System.out.println("ТЕСТ ПРОЦЕССА КОДИРОВАНИЯ И ДЕКОДИРОВАНИЯ ПРИ ЗАДАННЫХ G, H");
-        BooleanMatrix informationWord = booleanMatrixService.createPreparedInformationWord();
-        System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
-        booleanMatrixService.print(informationWord);
-        System.out.println("---------------");
 
-        GeneratingMatrix generatingMatrix = generatingMatrixService.createPreparedGeneratingMatrix();
-        System.out.println("ПОРОЖДАЮЩАЯ МАТРИЦА:");
-        booleanMatrixService.print(generatingMatrix.getBooleanMatrix());
-        System.out.println("---------------");
-
+        System.out.println("ПРОВЕРОЧНАЯ МАТРИЦА (H): ");
         ParityCheckMatrix parityCheckMatrix = parityCheckMatrixService.createPreparedParityCheckMatrix();
-        System.out.println("ПРОВЕРОЧНАЯ МАТРИЦА:");
         booleanMatrixService.print(parityCheckMatrix.getBooleanMatrix());
-        System.out.println("---------------");
 
-        System.out.println("ПОЛУЧЕНИЕ КОДОВОГО СЛОВА");
+        System.out.println("ПОРОЖДАЮЩАЯ МАТРИЦА (G): ");
+        GeneratingMatrix generatingMatrix = generatingMatrixService.createPreparedGeneratingMatrix();
+        booleanMatrixService.print(generatingMatrix.getBooleanMatrix());
+
+        System.out.println("ИНФОРМАЦИОННОЕ СЛОВО (word):");
+        BooleanMatrix informationWord = booleanMatrixService.createPreparedInformationWord();
+        booleanMatrixService.print(informationWord);
+
+        System.out.println("КОДОВОЕ СЛОВО (word*G): ");
         BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
-        System.out.println("---------------");
-
-        System.out.println("КОДОВОЕ СЛОВО: ");
         booleanMatrixService.print(codeWord);
-        System.out.println("---------------");
 
+        System.out.println("---------------");
         System.out.println("ТИПА ПЕРЕДАЧА ПО КАНАЛУ!");
         System.out.println("---------------");
 
-        System.out.println("ТРАНСПОНИРОВАНИЕ ПОЛУЧЕННОГО СООБЩЕНИЯ");
+        System.out.println("ТРАНСПОНИРОВАНИЕ ПОЛУЧЕННОГО СООБЩЕНИЯ transposed(word*G): ");
         BooleanMatrix transposedCodeWord = booleanMatrixService.getTransposedBooleanMatrix(codeWord);
-        System.out.println("---------------");
+        booleanMatrixService.print(transposedCodeWord);
 
-        System.out.println("ПОЛУЧЕНИЕ СИНДРОМА");
+        System.out.println("СИНДРОМ ПРОВЕРКИ H*transposed(word*G): ");
         BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), transposedCodeWord);
-        System.out.println("---------------");
-
-        System.out.println("СИНДРОМ: ");
         booleanMatrixService.print(syndrome);
-        System.out.println("---------------");
     }
 
     @Test
     public void test2() {
         System.out.println("1) ТЕСТ ПРОЦЕССА КОДИРОВАНИЯ И ДЕКОДИРОВАНИЯ ПРИ ЗАДАННОЙ H");
-        System.out.println("проверочная матрица: ");
+
+        System.out.println("ПРОВЕРОЧНАЯ МАТРИЦА (H): ");
         ParityCheckMatrix preparedParityCheckMatrix = parityCheckMatrixService.createPreparedParityCheckMatrix();
         booleanMatrixService.print(preparedParityCheckMatrix.getBooleanMatrix());
+
+        System.out.println("ПОРОЖДАЮЩАЯ МАТРИЦА (G): ");
         GeneratingMatrix generatingMatrixFromParityCheckMatrix1 = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(preparedParityCheckMatrix);
-        System.out.println("порождающая матрица: ");
         booleanMatrixService.print(generatingMatrixFromParityCheckMatrix1.getBooleanMatrix());
 
+        System.out.println("ИНФОРМАЦИОННОЕ СЛОВО (word):");
         BooleanMatrix informationWord = booleanMatrixService.createPreparedInformationWord();
-        System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
         booleanMatrixService.print(informationWord);
-        System.out.println("---------------");
 
-        System.out.println("ПОЛУЧЕНИЕ КОДОВОГО СЛОВА");
+        System.out.println("КОДОВОЕ СЛОВО (word*G): ");
         BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrixFromParityCheckMatrix1.getBooleanMatrix());
-        System.out.println("---------------");
-
-        System.out.println("КОДОВОЕ СЛОВО: ");
         booleanMatrixService.print(codeWord);
+
+        System.out.println("---------------");
+        System.out.println("ТИПА ПЕРЕДАЧА ПО КАНАЛУ!");
         System.out.println("---------------");
 
-        System.out.println("ТРАНСПОНИРОВАНИЕ ПОЛУЧЕННОГО СООБЩЕНИЯ");
+        System.out.println("ТРАНСПОНИРОВАНИЕ ПОЛУЧЕННОГО СООБЩЕНИЯ transposed(word*G): ");
         BooleanMatrix transposedCodeWord = booleanMatrixService.getTransposedBooleanMatrix(codeWord);
-        System.out.println("---------------");
+        booleanMatrixService.print(transposedCodeWord);
 
-        System.out.println("ПОЛУЧЕНИЕ СИНДРОМА");
+        System.out.println("СИНДРОМ ПРОВЕРКИ H*transposed(word*G): ");
         BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(preparedParityCheckMatrix.getBooleanMatrix(), transposedCodeWord);
-        System.out.println("---------------");
-
-        System.out.println("СИНДРОМ: ");
         booleanMatrixService.print(syndrome);
-        System.out.println("---------------");
 
-
+        //--------------------------------------------------------------------------------------------------------------
         System.out.println("2) ТЕСТ ПРОЦЕССА КОДИРОВАНИЯ И ДЕКОДИРОВАНИЯ ПРИ ЗАДАННОЙ H");
-        System.out.println("проверочная матрица: ");
+
+        System.out.println("ПРОВЕРОЧНАЯ МАТРИЦА (H): ");
         ParityCheckMatrix prepared2ParityCheckMatrix = parityCheckMatrixService.createPrepared2ParityCheckMatrix();
         booleanMatrixService.print(prepared2ParityCheckMatrix.getBooleanMatrix());
-        GeneratingMatrix generatingMatrixFromParityCheckMatrix2 = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(prepared2ParityCheckMatrix);
-        System.out.println("порождающая матрица: ");
-        booleanMatrixService.print(generatingMatrixFromParityCheckMatrix2.getBooleanMatrix());
 
-        BooleanMatrix informationWord1 = booleanMatrixService.createPrepared2InformationWord();
-        System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
-        booleanMatrixService.print(informationWord1);
+        System.out.println("ПОРОЖДАЮЩАЯ МАТРИЦА (G): ");
+        GeneratingMatrix generating2MatrixFromParityCheckMatrix1 = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(prepared2ParityCheckMatrix);
+        booleanMatrixService.print(generating2MatrixFromParityCheckMatrix1.getBooleanMatrix());
+
+        System.out.println("ИНФОРМАЦИОННОЕ СЛОВО (word):");
+        BooleanMatrix informationWord2 = booleanMatrixService.createPrepared2InformationWord();
+        booleanMatrixService.print(informationWord2);
+
+        System.out.println("КОДОВОЕ СЛОВО (word*G): ");
+        BooleanMatrix codeWord2 = booleanMatrixService.multiplicationMatrix(informationWord2, generating2MatrixFromParityCheckMatrix1.getBooleanMatrix());
+        booleanMatrixService.print(codeWord2);
+
+        System.out.println("---------------");
+        System.out.println("ТИПА ПЕРЕДАЧА ПО КАНАЛУ!");
         System.out.println("---------------");
 
-        System.out.println("ПОЛУЧЕНИЕ КОДОВОГО СЛОВА");
-        BooleanMatrix codeWord1 = booleanMatrixService.multiplicationMatrix(informationWord1, generatingMatrixFromParityCheckMatrix2.getBooleanMatrix());
-        System.out.println("---------------");
+        System.out.println("ТРАНСПОНИРОВАНИЕ ПОЛУЧЕННОГО СООБЩЕНИЯ transposed(word*G): ");
+        BooleanMatrix transposedCodeWord2 = booleanMatrixService.getTransposedBooleanMatrix(codeWord2);
+        booleanMatrixService.print(transposedCodeWord2);
 
-        System.out.println("КОДОВОЕ СЛОВО: ");
-        booleanMatrixService.print(codeWord1);
-        System.out.println("---------------");
-
-        System.out.println("ТРАНСПОНИРОВАНИЕ ПОЛУЧЕННОГО СООБЩЕНИЯ");
-        BooleanMatrix transposedCodeWord1 = booleanMatrixService.getTransposedBooleanMatrix(codeWord1);
-        System.out.println("---------------");
-
-        System.out.println("ПОЛУЧЕНИЕ СИНДРОМА");
-        BooleanMatrix syndrome1 = booleanMatrixService.multiplicationMatrix(prepared2ParityCheckMatrix.getBooleanMatrix(), transposedCodeWord1);
-        System.out.println("---------------");
-
-        System.out.println("СИНДРОМ: ");
-        booleanMatrixService.print(syndrome1);
-        System.out.println("---------------");
+        System.out.println("СИНДРОМ ПРОВЕРКИ H*transposed(word*G): ");
+        BooleanMatrix syndrome2 = booleanMatrixService.multiplicationMatrix(prepared2ParityCheckMatrix.getBooleanMatrix(), transposedCodeWord2);
+        booleanMatrixService.print(syndrome2);
     }
 }
