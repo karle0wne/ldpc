@@ -23,7 +23,6 @@ import java.util.stream.IntStream;
 @Service
 public class BooleanMatrixService {
 
-    //TODO дополнить сервис
     private static final Logger LOGGER = Logger.getLogger(BooleanMatrixService.class.getName());
 
     private final RowService rowService;
@@ -35,11 +34,35 @@ public class BooleanMatrixService {
         this.columnService = columnService;
     }
 
+    public long getCountEmptyRows(BooleanMatrix booleanMatrix) {
+        return booleanMatrix.getMatrix().stream()
+                .filter(row -> {
+                    List<Boolean> falseElements = row.getElements().stream()
+                            .filter(element -> !element)
+                            .collect(Collectors.toList());
+
+                    return (falseElements.size() == row.getElements().size());
+                })
+                .count();
+    }
+
+    public BooleanMatrix createIdentityMatrix(int N) {
+        List<Row> rows = IntStream.range(0, N)
+                .mapToObj(i -> new Row(new ArrayList<>(Collections.nCopies(N, false))))
+                .collect(Collectors.toList());
+        IntStream.range(0, N).forEach(i -> rows.get(i).getElements().set(i, true));
+        return createMatrix(rows);
+    }
+
+    public List<Integer> getTruePositionsWithoutFirstTruePosition(List<Boolean> elements, int firstTruePositionInColumn) {
+        return getOnlyTruePositions(elements).stream()
+                .filter(truePosition -> truePosition != firstTruePositionInColumn)
+                .collect(Collectors.toList());
+    }
+
     public BooleanMatrix getTransposedBooleanMatrix(BooleanMatrix booleanMatrix) {
         List<Column> columns = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
-        List<Row> rows = columns.stream()
-                .map(column -> new Row(column.getElements()))
-                .collect(Collectors.toList());
+        List<Row> rows = rowService.mapColumnsToRows(columns);
         return createMatrix(rows);
     }
 
@@ -54,8 +77,7 @@ public class BooleanMatrixService {
          * */
         List<Row> resultMatrix = booleanMatrixA.getMatrix().stream()
                 .map(row -> {
-                    List<Boolean> elements = row.getElements();
-                    List<Integer> onlyTruePositions = getOnlyTruePositions(elements);
+                    List<Integer> onlyTruePositions = getOnlyTruePositions(row.getElements());
 
                     List<Row> matrixB = booleanMatrixB.getMatrix();
 
@@ -90,14 +112,6 @@ public class BooleanMatrixService {
 
     private boolean isValidMatrixForMultiplication(BooleanMatrix leftBooleanMatrix, BooleanMatrix rightBooleanMatrix) {
         return (leftBooleanMatrix.getSizeX() == rightBooleanMatrix.getSizeY());
-    }
-
-    public BooleanMatrix createPreparedInformationWord() {
-        return createCodeWord(1, 1, 1);
-    }
-
-    public BooleanMatrix createPrepared2InformationWord() {
-        return createCodeWord(1, 1, 1, 0);
     }
 
     public BooleanMatrix createCodeWord(@NotNull Integer... elements) {
@@ -143,5 +157,11 @@ public class BooleanMatrixService {
         );
     }
 
+    public BooleanMatrix createPreparedInformationWord() {
+        return createCodeWord(1, 1, 1);
+    }
 
+    public BooleanMatrix createPrepared2InformationWord() {
+        return createCodeWord(1, 1, 1, 0);
+    }
 }

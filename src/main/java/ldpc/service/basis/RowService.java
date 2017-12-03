@@ -1,5 +1,6 @@
 package ldpc.service.basis;
 
+import ldpc.matrix.basis.Column;
 import ldpc.matrix.basis.Row;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,20 @@ import java.util.stream.Collectors;
 
 @Service
 public class RowService {
+
+    public List<Row> mapColumnsToRows(List<Column> columns) {
+        return columns.stream()
+                .map(column -> new Row(column.getElements()))
+                .collect(Collectors.toList());
+    }
+
+    public boolean isFullFalseElementsRow(Row row) {
+        List<Boolean> falseElements = row.getElements().stream()
+                .filter(element -> !element)
+                .collect(Collectors.toList());
+
+        return falseElements.size() == row.getElements().size();
+    }
 
     public String rowToString(Row row) {
         return row.getElements().stream()
