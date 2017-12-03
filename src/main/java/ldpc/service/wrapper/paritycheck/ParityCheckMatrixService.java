@@ -44,4 +44,15 @@ public class ParityCheckMatrixService {
 
         return new ParityCheckMatrix(booleanMatrixService.createMatrix(matrix));
     }
+
+    public ParityCheckMatrix createPrepared3ParityCheckMatrix() {
+        List<Row> matrix = new ArrayList<>();
+        matrix.add(rowService.createRow(1, 0, 1, 1, 0));
+        matrix.add(rowService.createRow(1, 1, 1, 0, 0));
+        matrix.add(rowService.createRow(0, 1, 0, 1, 1));
+        matrix.add(rowService.createRow(0, 0, 0, 1, 1));
+        matrix.add(rowService.createRow(1, 0, 0, 0, 1));
+
+        return new ParityCheckMatrix(booleanMatrixService.createMatrix(matrix));
+    }
 }
