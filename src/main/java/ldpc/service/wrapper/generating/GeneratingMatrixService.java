@@ -39,68 +39,65 @@ public class GeneratingMatrixService {
         this.columnService = columnService;
     }
 
+    /*
+    * блок основных функций!
+    * */
     public GeneratingMatrix getGeneratingMatrixFromParityCheckMatrix(ParityCheckMatrix parityCheckMatrix) {
         BooleanMatrix booleanMatrix = parityCheckMatrix.getBooleanMatrix();
         int iterator = 0;
 
         /*
-        * Получение синдрома проверки
+        * Получение маски проверки
         * */
-        Column columnCheckSyndrome = columnService.getColumnCheckSyndrome(booleanMatrix);
+        Column mask = booleanMatrixService.getMask(booleanMatrix);
 
         /*
-        * Пока синдром проверки не станет полность состоять из false элементов (то есть вся матрица будет преобразована)
+        * Пока маска проверки не станет полность состоять из false элементов (то есть вся матрица будет преобразована)
         * */
-        while (!getNumbersOfErrorBySyndrome(columnCheckSyndrome).isEmpty()) {
+        while (booleanMatrixService.getCountTrueElements(mask.getElements()) > 0) {
+
+            iterator = checkIterator(iterator);
+
+            /*
+            * Обновляем маску
+            * */
+            mask = booleanMatrixService.getMask(booleanMatrix);
+
             for (int i = 0; i < booleanMatrix.getSizeY(); i++) {
                 Column columnMatrix = columnService.getColumnByIndex(booleanMatrix, i);
 
                 /*
-                * Поиск не преобразованного элемента синдрома проверки в матрице
+                * Поиск не преобразованного элемента маски проверки в матрице
                 * */
-                int firstTruePosition = getFirstTruePosition(columnCheckSyndrome, columnMatrix);
+                int firstTruePosition = getFirstTruePosition(mask, columnMatrix);
 
                 if (firstTruePosition != DOES_NOT_EXIST) {
                     /*
-                    * XOR строк матрицы и приведение столбца матрицы к виду, когда только (i,j)=true
+                    * XOR строк матрицы для столбца
                     * */
-                    getIdentityColumnByFirstTruePositionColumn(booleanMatrix, columnCheckSyndrome, columnMatrix, firstTruePosition);
+                    getIdentityColumnByFirstTruePositionColumn(booleanMatrix, mask, columnMatrix, firstTruePosition);
                 }
             }
 
             /*
-            * Удаляем пустые строк и удаляем на позиции пустой строки элемент из синдрома проверки
+            * Удаляем пустые строки и удаляем на позиции пустой строки элемент из маски проверки
             * */
-            removeEmptyRows(booleanMatrix, columnCheckSyndrome);
+            removeEmptyRows(booleanMatrix, mask);
 
             /*
             * создаем матрицу заново, тк матрица изменилась после удаления пустых строк
             * */
             booleanMatrix = booleanMatrixService.createMatrix(booleanMatrix.getMatrix());
 
-            /*
-            * переставляем столбец местами со столбцом в которой есть true элемент,
-            * если в соотвествующей позиции не удалось привести столбец матрицы
-            * */
-            swapPositionsForAdjustmentsIdentityMatrixInBooleanMatrix(booleanMatrix, columnCheckSyndrome);
+            sortedRows(booleanMatrix);
 
-            if (iterator < BORDER_FOR_EXCEPTION) {
-                iterator++;
-            } else {
-                throw new NullPointerException("Проверьте валидность проверочной матрицы!");
-            }
+            sortedColumns(booleanMatrix);
         }
-
-        /*
-        * Сортировка строк матрицы, чтоб получилась упорядоченная единичная матрица,
-        * в которой (i,j) = true
-        * */
-        sortedRowsByIdentityMatrix(booleanMatrix);
 
         /*
         * Извлекаем столбцы с зависимыми элементами матрицы (то есть матрица без единичной матричной части)
         * */
-        List<Column> columnsForGeneratingMatrix = getColumnsWithoutIdentityMatrixBySortedBooleanMatrix(booleanMatrix);
+        List<Column> columnsForGeneratingMatrix = getMatrixWithoutIdentityMatrix(booleanMatrix);
 
         /*
         * создаем порождающую матрицу
@@ -114,10 +111,29 @@ public class GeneratingMatrixService {
         return new GeneratingMatrix(booleanGeneratingMatrix);
     }
 
-    private void getIdentityColumnByFirstTruePositionColumn(BooleanMatrix booleanMatrix, Column columnCheckSyndrome, Column columnMatrix, int firstTruePosition) {
-        columnCheckSyndrome.getElements().set(firstTruePosition, false);
+    /*
+    * блок внутренних служебных функций
+    * */
+    private int checkIterator(int iterator) {
+        if (iterator < BORDER_FOR_EXCEPTION) {
+            iterator++;
+        } else {
+            throw new RuntimeException("Проверьте валидность проверочной матрицы!");
+        }
+        return iterator;
+    }
 
-        List<Integer> changingTruePositions = booleanMatrixService.getTruePositionsWithoutFirstTruePosition(columnMatrix.getElements(), firstTruePosition);
+    private int getFirstTruePosition(Column mask, Column columnMatrix) {
+        return IntStream.range(0, mask.getElements().size())
+                .filter(j -> mask.get(j) && columnMatrix.get(j))
+                .findFirst()
+                .orElse(DOES_NOT_EXIST);
+    }
+
+    private void getIdentityColumnByFirstTruePositionColumn(BooleanMatrix booleanMatrix, Column mask, Column columnMatrix, int firstTruePosition) {
+        mask.getElements().set(firstTruePosition, false);
+
+        List<Integer> changingTruePositions = booleanMatrixService.getPositionsTrueElementsWithoutFirst(columnMatrix.getElements(), firstTruePosition);
 
         for (Integer changingTruePosition : changingTruePositions) {
             Row currentRow = booleanMatrix.getMatrix().get(firstTruePosition);
@@ -128,41 +144,62 @@ public class GeneratingMatrixService {
         }
     }
 
-    private void removeEmptyRows(BooleanMatrix booleanMatrix, Column columnCheckSyndrome) {
+    private void removeEmptyRows(BooleanMatrix booleanMatrix, Column mask) {
         long countRowsForDelete = booleanMatrixService.getCountEmptyRows(booleanMatrix);
 
+        List<Row> matrix = booleanMatrix.getMatrix();
         for (int i = 0; i < countRowsForDelete; i++) {
-            Integer numberOfRowForDelete = DOES_NOT_EXIST;
-            for (Row row : booleanMatrix.getMatrix()) {
-                if (rowService.isFullFalseElementsRow(row)) {
-                    numberOfRowForDelete = booleanMatrix.getMatrix().indexOf(row);
-                    break;
-                }
-            }
+            Integer numberOfRowForDelete = IntStream.range(0, booleanMatrix.getSizeY())
+                    .filter(j -> rowService.isFullFalseElementsRow(matrix.get(j)))
+                    .findFirst()
+                    .orElse(DOES_NOT_EXIST);
             if (numberOfRowForDelete != DOES_NOT_EXIST) {
-                booleanMatrix.getMatrix().remove((int) numberOfRowForDelete);
-                columnCheckSyndrome.getElements().remove((int) numberOfRowForDelete);
+                matrix.remove((int) numberOfRowForDelete);
+                mask.getElements().remove((int) numberOfRowForDelete);
             }
         }
     }
 
-    private void sortedRowsByIdentityMatrix(BooleanMatrix booleanMatrix) {
+    private void sortedRows(BooleanMatrix booleanMatrix) {
+        List<Row> matrix = booleanMatrix.getMatrix();
         for (int i = 0; i < booleanMatrix.getSizeY(); i++) {
-            if (!booleanMatrix.getMatrix().get(i).get(i)) {
-                Column columnByIndex = columnService.getColumnByIndex(booleanMatrix, i);
-                Integer indexForSwap = columnByIndex.getElements().stream()
-                        .filter(element -> element)
-                        .map(element -> columnByIndex.getElements().indexOf(element))
-                        .findFirst()
-                        .orElse(DOES_NOT_EXIST);
-                if (indexForSwap != DOES_NOT_EXIST) {
-                    Collections.swap(booleanMatrix.getMatrix(), i, indexForSwap);
+            Column columnByIndex = columnService.getColumnByIndex(booleanMatrix, i);
+            if (booleanMatrixService.getCountTrueElements(columnByIndex.getElements()) == 1) {
+                if (!matrix.get(i).get(i)) {
+                    Integer indexForSwap = booleanMatrixService.getPositionFirstTrueElement(columnByIndex.getElements(), 0, booleanMatrix.getSizeY());
+                    if (indexForSwap != DOES_NOT_EXIST) {
+                        Collections.swap(matrix, i, indexForSwap);
+                    }
                 }
             }
         }
     }
 
-    private List<Column> getColumnsWithoutIdentityMatrixBySortedBooleanMatrix(BooleanMatrix booleanMatrix) {
+    private void sortedColumns(BooleanMatrix booleanMatrix) {
+        List<Integer> unsortedRows = getUnsortedRows(booleanMatrix);
+
+        List<Row> matrix = booleanMatrix.getMatrix();
+        for (Integer rowNumber : unsortedRows) {
+            Row row = matrix.get(rowNumber);
+            Integer truePosition = booleanMatrixService.getPositionFirstTrueElement(row.getElements(), rowNumber, booleanMatrix.getSizeX());
+            if (truePosition != DOES_NOT_EXIST) {
+                IntStream.range(0, booleanMatrix.getSizeY()).forEach(i -> {
+                    List<Boolean> elements = matrix.get(i).getElements();
+                    Collections.swap(elements, rowNumber, truePosition);
+                });
+            }
+        }
+    }
+
+    private List<Integer> getUnsortedRows(BooleanMatrix booleanMatrix) {
+        List<Row> matrix = booleanMatrix.getMatrix();
+        return IntStream.range(0, booleanMatrix.getSizeY())
+                .filter(i -> !matrix.get(i).get(i))
+                .boxed()
+                .collect(Collectors.toList());
+    }
+
+    private List<Column> getMatrixWithoutIdentityMatrix(BooleanMatrix booleanMatrix) {
         List<Column> allColumnsByBooleanMatrix = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
         return IntStream.range(booleanMatrix.getSizeY(), booleanMatrix.getSizeX())
                 .mapToObj(allColumnsByBooleanMatrix::get)
@@ -171,60 +208,32 @@ public class GeneratingMatrixService {
 
     private BooleanMatrix addIdentityMatrix(BooleanMatrix booleanGeneratingMatrix) {
         BooleanMatrix booleanIdentityMatrix = booleanMatrixService.createIdentityMatrix(booleanGeneratingMatrix.getSizeY());
+
+        List<Row> matrix = booleanGeneratingMatrix.getMatrix();
+        List<Row> identityMatrix = booleanIdentityMatrix.getMatrix();
         for (int i = 0; i < booleanGeneratingMatrix.getSizeY(); i++) {
-            booleanGeneratingMatrix.getMatrix().get(i).getElements().addAll(booleanIdentityMatrix.getMatrix().get(i).getElements());
+            matrix.get(i).getElements().addAll(identityMatrix.get(i).getElements());
         }
-
-        /*
-        * создаем матрицу заново, тк матрица изменилась после добавления элементов
-        * */
-        booleanGeneratingMatrix = booleanMatrixService.createMatrix(booleanGeneratingMatrix.getMatrix());
-        return booleanGeneratingMatrix;
+        return booleanMatrixService.createMatrix(matrix);
     }
 
-    private void swapPositionsForAdjustmentsIdentityMatrixInBooleanMatrix(BooleanMatrix booleanMatrix, Column columnCheckSyndrome) {
-        List<Integer> numbersRowAndColumnOfError = getNumbersOfErrorBySyndrome(columnCheckSyndrome);
-        for (Integer number : numbersRowAndColumnOfError) {
-            for (int i = booleanMatrix.getSizeY(); i < booleanMatrix.getSizeX(); i++) {
-                if (booleanMatrix.getMatrix().get(number).get(i)) {
-                    for (int j = 0; j < booleanMatrix.getSizeY(); j++) {
-                        Collections.swap(booleanMatrix.getMatrix().get(j).getElements(), number, i);
-                    }
-                }
-            }
-        }
-    }
-
-    private List<Integer> getNumbersOfErrorBySyndrome(Column columnCheckSyndrome) {
-        return columnCheckSyndrome.getElements().stream()
-                .filter(element -> element)
-                .map(element -> columnCheckSyndrome.getElements().indexOf(element))
-                .collect(Collectors.toList());
-    }
-
-    private int getFirstTruePosition(Column columnCheckSyndrome, Column columnMatrix) {
-        return IntStream.range(0, columnCheckSyndrome.getElements().size())
-                .filter(j -> columnCheckSyndrome.get(j) && columnMatrix.get(j))
-                .findFirst()
-                .orElse(DOES_NOT_EXIST);
-    }
-
-    public GeneratingMatrix createPreparedGeneratingMatrix() {
+    /*
+    * блок обслуживающий создание матриц функций
+    * */
+    public GeneratingMatrix preparedPGM() {
         List<Row> matrix = new ArrayList<>();
         matrix.add(rowService.createRow(1, 1, 1, 1, 0, 0));
         matrix.add(rowService.createRow(0, 1, 1, 0, 1, 0));
         matrix.add(rowService.createRow(1, 1, 0, 0, 0, 1));
-
         return new GeneratingMatrix(booleanMatrixService.createMatrix(matrix));
     }
 
-    public GeneratingMatrix createPrepared2GeneratingMatrix() {
+    public GeneratingMatrix preparedPGM2() {
         List<Row> matrix = new ArrayList<>();
         matrix.add(rowService.createRow(1, 0, 0, 0, 0, 1, 1));
         matrix.add(rowService.createRow(0, 1, 0, 0, 1, 0, 1));
         matrix.add(rowService.createRow(0, 0, 1, 0, 1, 1, 0));
         matrix.add(rowService.createRow(0, 0, 0, 1, 1, 1, 1));
-
         return new GeneratingMatrix(booleanMatrixService.createMatrix(matrix));
     }
 }
