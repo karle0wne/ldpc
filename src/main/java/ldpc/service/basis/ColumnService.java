@@ -5,9 +5,7 @@ import ldpc.matrix.basis.Column;
 import org.springframework.stereotype.Service;
 
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -25,11 +23,6 @@ public class ColumnService {
         List<Boolean> columnElements = booleanMatrix.getMatrix().stream()
                 .map(row -> row.get(index))
                 .collect(Collectors.toList());
-        return new Column(columnElements);
-    }
-
-    public Column getColumnCheckSyndrome(BooleanMatrix booleanMatrix) {
-        List<Boolean> columnElements = new ArrayList<>(Collections.nCopies(booleanMatrix.getSizeY(), true));
         return new Column(columnElements);
     }
 

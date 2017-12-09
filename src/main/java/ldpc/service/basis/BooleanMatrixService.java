@@ -8,9 +8,10 @@ import org.springframework.stereotype.Service;
 
 import javax.validation.constraints.NotNull;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static ldpc.service.wrapper.generating.GeneratingMatrixService.DOES_NOT_EXIST;
 
 /**
  * Сервис для матрицы, где
@@ -23,8 +24,6 @@ import java.util.stream.IntStream;
 @Service
 public class BooleanMatrixService {
 
-    private static final Logger LOGGER = Logger.getLogger(BooleanMatrixService.class.getName());
-
     private final RowService rowService;
     private final ColumnService columnService;
 
@@ -32,6 +31,73 @@ public class BooleanMatrixService {
     public BooleanMatrixService(RowService rowService, ColumnService columnService) {
         this.rowService = rowService;
         this.columnService = columnService;
+    }
+
+    /*
+    * блок основных функций!
+    * */
+    public BooleanMatrix getTransposedBooleanMatrix(BooleanMatrix booleanMatrix) {
+        List<Column> columns = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
+        List<Row> rows = rowService.mapColumnsToRows(columns);
+        return createMatrix(rows);
+    }
+
+    public BooleanMatrix multiplicationMatrix(BooleanMatrix booleanMatrixA, BooleanMatrix booleanMatrixB) {
+        if (!isValidMatrixForMultiplication(booleanMatrixA, booleanMatrixB)) {
+            throw new RuntimeException("Проверьте размеры матриц, которые необходимо перемножить!");
+        }
+
+        List<Row> resultMatrix = booleanMatrixA.getMatrix().stream()
+                .map(row -> {
+                    List<Integer> truePositionsInRow = getPositionsTrueElements(row.getElements());
+
+                    List<Row> matrixB = booleanMatrixB.getMatrix();
+
+                    List<Row> rowsForXOR = truePositionsInRow.stream()
+                            .map(matrixB::get)
+                            .collect(Collectors.toList());
+
+                    List<Boolean> resultElements = generateElements(booleanMatrixB.getSizeX(), false);
+                    for (Row filteredRow : rowsForXOR) {
+                        resultElements = xor(resultElements, filteredRow.getElements());
+                    }
+                    return new Row(resultElements);
+                })
+                .collect(Collectors.toList());
+
+        return createMatrix(resultMatrix);
+    }
+
+    /*
+    * блок внутренних служебных функций
+    * */
+    private boolean isValidMatrixForMultiplication(BooleanMatrix leftBooleanMatrix, BooleanMatrix rightBooleanMatrix) {
+        return (leftBooleanMatrix.getSizeX() == rightBooleanMatrix.getSizeY());
+    }
+
+    private List<Integer> getPositionsTrueElements(List<Boolean> elements) {
+        return IntStream.range(0, elements.size())
+                .filter(elements::get)
+                .boxed()
+                .collect(Collectors.toList());
+    }
+
+    private ArrayList<Boolean> generateElements(int size, boolean element) {
+        return new ArrayList<>(Collections.nCopies(size, element));
+    }
+
+    private double getPercentage(double part, double all) {
+        return ((part / all) * 100.0d);
+    }
+
+    /*
+    * блок внешних служебных функций
+    * */
+    public List<Boolean> xor(List<Boolean> elementsA, List<Boolean> elementsB) {
+        int size = elementsA.size() >= elementsB.size() ? elementsA.size() : elementsB.size();
+        return IntStream.range(0, size)
+                .mapToObj(i -> elementsA.get(i) ^ elementsB.get(i))
+                .collect(Collectors.toList());
     }
 
     public long getCountEmptyRows(BooleanMatrix booleanMatrix) {
@@ -48,70 +114,57 @@ public class BooleanMatrixService {
 
     public BooleanMatrix createIdentityMatrix(int N) {
         List<Row> rows = IntStream.range(0, N)
-                .mapToObj(i -> new Row(new ArrayList<>(Collections.nCopies(N, false))))
+                .mapToObj(i -> new Row(generateElements(N, false)))
                 .collect(Collectors.toList());
         IntStream.range(0, N).forEach(i -> rows.get(i).getElements().set(i, true));
         return createMatrix(rows);
     }
 
-    public List<Integer> getTruePositionsWithoutFirstTruePosition(List<Boolean> elements, int firstTruePositionInColumn) {
-        return getOnlyTruePositions(elements).stream()
-                .filter(truePosition -> truePosition != firstTruePositionInColumn)
+    public List<Integer> getPositionsTrueElementsWithoutFirst(List<Boolean> elements, int firstTruePosition) {
+        return getPositionsTrueElements(elements).stream()
+                .filter(truePosition -> truePosition != firstTruePosition)
                 .collect(Collectors.toList());
     }
 
-    public BooleanMatrix getTransposedBooleanMatrix(BooleanMatrix booleanMatrix) {
-        List<Column> columns = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
-        List<Row> rows = rowService.mapColumnsToRows(columns);
-        return createMatrix(rows);
+    public long getCountTrueElements(List<Boolean> elements) {
+        return elements.stream()
+                .filter(element -> element)
+                .count();
     }
 
-    public BooleanMatrix multiplicationMatrix(BooleanMatrix booleanMatrixA, BooleanMatrix booleanMatrixB) {
-        if (!isValidMatrixForMultiplication(booleanMatrixA, booleanMatrixB)) {
-            LOGGER.severe("Проверьте размеры матриц, которые необходимо перемножить!");
-            throw new NullPointerException();
-        }
-
-        /*
-         * onward magic :)
-         * */
-        List<Row> resultMatrix = booleanMatrixA.getMatrix().stream()
-                .map(row -> {
-                    List<Integer> onlyTruePositions = getOnlyTruePositions(row.getElements());
-
-                    List<Row> matrixB = booleanMatrixB.getMatrix();
-
-                    List<Row> rowsForXOR = onlyTruePositions.stream()
-                            .map(matrixB::get)
-                            .collect(Collectors.toList());
-
-                    List<Boolean> resultElements = new ArrayList<>(Collections.nCopies(booleanMatrixB.getSizeX(), false));
-                    for (Row filteredRow : rowsForXOR) {
-                        resultElements = xor(resultElements, filteredRow.getElements());
-                    }
-                    return new Row(resultElements);
-                })
-                .collect(Collectors.toList());
-
-        return createMatrix(resultMatrix);
-    }
-
-    private List<Integer> getOnlyTruePositions(List<Boolean> elements) {
-        return IntStream.range(0, elements.size())
+    public Integer getPositionFirstTrueElement(List<Boolean> elements, int rangeStart, int rangeStop) {
+        return IntStream.range(rangeStart, rangeStop)
                 .filter(elements::get)
-                .boxed()
-                .collect(Collectors.toList());
+                .findFirst()
+                .orElse(DOES_NOT_EXIST);
     }
 
-    public List<Boolean> xor(List<Boolean> elementsA, List<Boolean> elementsB) {
-        int size = elementsA.size() >= elementsB.size() ? elementsA.size() : elementsB.size();
-        return IntStream.range(0, size)
-                .mapToObj(i -> elementsA.get(i) ^ elementsB.get(i))
-                .collect(Collectors.toList());
+    public Column getMask(BooleanMatrix booleanMatrix) {
+        return new Column(generateElements(booleanMatrix.getSizeY(), true));
     }
 
-    private boolean isValidMatrixForMultiplication(BooleanMatrix leftBooleanMatrix, BooleanMatrix rightBooleanMatrix) {
-        return (leftBooleanMatrix.getSizeX() == rightBooleanMatrix.getSizeY());
+    public double getDensity(BooleanMatrix booleanMatrix) {
+        List<Row> matrix = booleanMatrix.getMatrix();
+        long count = matrix.stream()
+                .mapToLong(row -> getCountTrueElements(row.getElements()))
+                .sum();
+        int countElements = booleanMatrix.getSizeY() * booleanMatrix.getSizeX();
+        return getPercentage(count, countElements);
+    }
+
+    /*
+    * блок обслуживающий вывод и создание матриц функций
+    * */
+    public BooleanMatrix preparedInfoWord() {
+        return createCodeWord(1, 1, 1);
+    }
+
+    public BooleanMatrix preparedInfoWord2() {
+        return createCodeWord(1, 1, 1, 0);
+    }
+
+    public BooleanMatrix preparedInfoWord3() {
+        return createCodeWord(1, 1, 1, 0, 1, 1, 1);
     }
 
     public BooleanMatrix createCodeWord(@NotNull Integer... elements) {
@@ -133,16 +186,15 @@ public class BooleanMatrixService {
         Integer maxRowSize = rows.stream()
                 .mapToInt(row -> row.getElements().size())
                 .max()
-                .orElseThrow(NullPointerException::new);
+                .orElseThrow(RuntimeException::new);
 
         Integer minRowSize = rows.stream()
                 .mapToInt(row -> row.getElements().size())
                 .min()
-                .orElseThrow(NullPointerException::new);
+                .orElseThrow(RuntimeException::new);
 
         if (!Objects.equals(minRowSize, maxRowSize)) {
-            LOGGER.severe("Укажите матрицу с одинаковым количеством элементов в строках!");
-            throw new NullPointerException();
+            throw new RuntimeException("Укажите матрицу с одинаковым количеством элементов в строках!");
         }
 
         return new BooleanMatrix(rows, maxRowSize, rows.size());
@@ -152,16 +204,7 @@ public class BooleanMatrixService {
         System.out.println(
                 booleanMatrix.getMatrix().stream()
                         .map(rowService::rowToString)
-                        .collect(Collectors.joining(" \n"))
-                        + "\n"
+                        .collect(Collectors.joining(" \n")) + "\n"
         );
-    }
-
-    public BooleanMatrix createPreparedInformationWord() {
-        return createCodeWord(1, 1, 1);
-    }
-
-    public BooleanMatrix createPrepared2InformationWord() {
-        return createCodeWord(1, 1, 1, 0);
     }
 }
