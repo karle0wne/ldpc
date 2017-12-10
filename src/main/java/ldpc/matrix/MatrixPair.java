@@ -1,7 +1,7 @@
 package ldpc.matrix;
 
 import ldpc.matrix.wrapper.generating.GeneratingMatrix;
-import ldpc.matrix.wrapper.paritycheck.wrapper.LowDensityParityCheckMatrix;
+import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix;
 
 /**
  * А это у нас будет пара порождающая-проверочная матрицы
@@ -9,9 +9,9 @@ import ldpc.matrix.wrapper.paritycheck.wrapper.LowDensityParityCheckMatrix;
 public class MatrixPair {
 
     private GeneratingMatrix generatingMatrix;
-    private LowDensityParityCheckMatrix ldpMatrix;
+    private StrictLowDensityParityCheckMatrix ldpMatrix;
 
-    public MatrixPair(GeneratingMatrix generatingMatrix, LowDensityParityCheckMatrix ldpMatrix) {
+    public MatrixPair(GeneratingMatrix generatingMatrix, StrictLowDensityParityCheckMatrix ldpMatrix) {
         this.generatingMatrix = generatingMatrix;
         this.ldpMatrix = ldpMatrix;
     }
@@ -24,11 +24,11 @@ public class MatrixPair {
         this.generatingMatrix = generatingMatrix;
     }
 
-    public LowDensityParityCheckMatrix getLdpMatrix() {
+    public StrictLowDensityParityCheckMatrix getLdpMatrix() {
         return ldpMatrix;
     }
 
-    public void setLdpMatrix(LowDensityParityCheckMatrix ldpMatrix) {
+    public void setLdpMatrix(StrictLowDensityParityCheckMatrix ldpMatrix) {
         this.ldpMatrix = ldpMatrix;
     }
 }

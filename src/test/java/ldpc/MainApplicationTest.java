@@ -3,9 +3,11 @@ package ldpc;
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.wrapper.generating.GeneratingMatrix;
 import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
+import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.wrapper.generating.GeneratingMatrixService;
 import ldpc.service.wrapper.paritycheck.ParityCheckMatrixService;
+import ldpc.service.wrapper.paritycheck.wrapper.LDPCMatrixService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,9 @@ public class MainApplicationTest {
 
     @Autowired
     private ParityCheckMatrixService parityCheckMatrixService;
+
+    @Autowired
+    private LDPCMatrixService ldpcMatrixService;
 
     @Test
     public void test() {
@@ -166,5 +171,12 @@ public class MainApplicationTest {
         System.out.println("СИНДРОМ ПРОВЕРКИ H*transposed(word*G): ");
         BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), transposedCodeWord);
         booleanMatrixService.print(syndrome);
+    }
+
+    @Test
+    public void test4() {
+        System.out.println("LDPC: ");
+        StrictLowDensityParityCheckMatrix ldpcMatrix = ldpcMatrixService.newStrictLDPCMatrix(parityCheckMatrixService.preparedPCM4());
+        ldpcMatrixService.print(ldpcMatrix);
     }
 }

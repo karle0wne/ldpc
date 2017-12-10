@@ -5,39 +5,39 @@ import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 /**
  * Проверочная матрица с малой плотностью проверок на четность
  */
-public class LowDensityParityCheckMatrix {
+public class StrictLowDensityParityCheckMatrix {
 
-    private ParityCheckMatrix booleanMatrix;
-    private int K;
-    private int J;
-    private int G;
+    private ParityCheckMatrix parityCheckMatrix;
+    private long K;
+    private long J;
+    private long G;
 
     /**
-     * @param booleanMatrix сама матрица
+     * @param parityCheckMatrix сама матрица
      * @param K             количество единиц в каждой строке
      * @param J             количество единиц в каждом столбце
      * @param G             обхват графа
      */
-    public LowDensityParityCheckMatrix(ParityCheckMatrix booleanMatrix, int K, int J, int G) {
-        this.booleanMatrix = booleanMatrix;
+    public StrictLowDensityParityCheckMatrix(ParityCheckMatrix parityCheckMatrix, long K, long J, long G) {
+        this.parityCheckMatrix = parityCheckMatrix;
         this.K = K;
         this.J = J;
         this.G = G;
     }
 
-    public ParityCheckMatrix getBooleanMatrix() {
-        return booleanMatrix;
+    public ParityCheckMatrix getParityCheckMatrix() {
+        return parityCheckMatrix;
     }
 
-    public int getK() {
+    public long getK() {
         return K;
     }
 
-    public int getJ() {
+    public long getJ() {
         return J;
     }
 
-    public int getG() {
+    public long getG() {
         return G;
     }
 }
