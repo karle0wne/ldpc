@@ -39,7 +39,7 @@ public class BooleanMatrixService {
     public BooleanMatrix getTransposedBooleanMatrix(BooleanMatrix booleanMatrix) {
         List<Column> columns = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
         List<Row> rows = rowService.mapColumnsToRows(columns);
-        return createMatrix(rows);
+        return newMatrix(rows);
     }
 
     public BooleanMatrix multiplicationMatrix(BooleanMatrix booleanMatrixA, BooleanMatrix booleanMatrixB) {
@@ -61,11 +61,11 @@ public class BooleanMatrixService {
                     for (Row filteredRow : rowsForXOR) {
                         resultElements = xor(resultElements, filteredRow.getElements());
                     }
-                    return new Row(resultElements);
+                    return rowService.newRow(resultElements);
                 })
                 .collect(Collectors.toList());
 
-        return createMatrix(resultMatrix);
+        return newMatrix(resultMatrix);
     }
 
     /*
@@ -114,10 +114,10 @@ public class BooleanMatrixService {
 
     public BooleanMatrix createIdentityMatrix(int N) {
         List<Row> rows = IntStream.range(0, N)
-                .mapToObj(i -> new Row(generateElements(N, false)))
+                .mapToObj(i -> rowService.newRow(generateElements(N, false)))
                 .collect(Collectors.toList());
         IntStream.range(0, N).forEach(i -> rows.get(i).getElements().set(i, true));
-        return createMatrix(rows);
+        return newMatrix(rows);
     }
 
     public List<Integer> getPositionsTrueElementsWithoutFirst(List<Boolean> elements, int firstTruePosition) {
@@ -140,7 +140,7 @@ public class BooleanMatrixService {
     }
 
     public Column getMask(BooleanMatrix booleanMatrix) {
-        return new Column(generateElements(booleanMatrix.getSizeY(), true));
+        return columnService.newColumn(generateElements(booleanMatrix.getSizeY(), true));
     }
 
     public double getDensity(BooleanMatrix booleanMatrix) {
@@ -156,33 +156,59 @@ public class BooleanMatrixService {
     * блок обслуживающий вывод и создание матриц функций
     * */
     public BooleanMatrix preparedInfoWord() {
-        return createCodeWord(1, 1, 1);
+        return newWord(1, 1, 1);
     }
 
     public BooleanMatrix preparedInfoWord2() {
-        return createCodeWord(1, 1, 1, 0);
+        return newWord(1, 1, 1, 0);
     }
 
     public BooleanMatrix preparedInfoWord3() {
-        return createCodeWord(1, 1, 1, 0, 1, 1, 1);
+        return newWord(1, 1, 1, 0, 1, 1, 1);
     }
 
-    public BooleanMatrix createCodeWord(@NotNull Integer... elements) {
+    public BooleanMatrix newWord(@NotNull Integer... elements) {
         List<Boolean> rowElements = Arrays.stream(elements)
                 .map(element -> element == 1)
                 .collect(Collectors.toList());
-        return createCodeWord(rowElements);
+        return newWord(rowElements);
     }
 
-    public BooleanMatrix createCodeWord(@NotNull Boolean... elements) {
-        return createCodeWord(Arrays.asList(elements));
+    public BooleanMatrix newWord(@NotNull Boolean... elements) {
+        return newWord(Arrays.asList(elements));
     }
 
-    public BooleanMatrix createCodeWord(List<Boolean> elements) {
-        return createMatrix(new ArrayList<>(Collections.singletonList(new Row(elements))));
+    public BooleanMatrix newWord(List<Boolean> elements) {
+        return newMatrix(rowService.newRows(Collections.singletonList(rowService.newRow(elements))));
     }
 
-    public BooleanMatrix createMatrix(List<Row> rows) {
+    public BooleanMatrix newMatrix(BooleanMatrix booleanMatrix) {
+        return newMatrix(booleanMatrix.getMatrix());
+    }
+
+    public BooleanMatrix newMatrix(List<Row> rows) {
+        Integer maxRowSize = rows.stream()
+                .mapToInt(row -> row.getElements().size())
+                .max()
+                .orElseThrow(RuntimeException::new);
+
+        Integer minRowSize = rows.stream()
+                .mapToInt(row -> row.getElements().size())
+                .min()
+                .orElseThrow(RuntimeException::new);
+
+        if (!Objects.equals(minRowSize, maxRowSize)) {
+            throw new RuntimeException("Укажите матрицу с одинаковым количеством элементов в строках!");
+        }
+
+        return new BooleanMatrix(rowService.newRows(rows), maxRowSize, rows.size());
+    }
+
+    public BooleanMatrix copyMatrix(BooleanMatrix booleanMatrix) {
+        return copyMatrix(booleanMatrix.getMatrix());
+    }
+
+    public BooleanMatrix copyMatrix(List<Row> rows) {
         Integer maxRowSize = rows.stream()
                 .mapToInt(row -> row.getElements().size())
                 .max()

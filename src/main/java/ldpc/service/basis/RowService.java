@@ -5,6 +5,7 @@ import ldpc.matrix.basis.Row;
 import org.springframework.stereotype.Service;
 
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,7 +15,7 @@ public class RowService {
 
     public List<Row> mapColumnsToRows(List<Column> columns) {
         return columns.stream()
-                .map(column -> new Row(column.getElements()))
+                .map(this::newRow)
                 .collect(Collectors.toList());
     }
 
@@ -42,10 +43,32 @@ public class RowService {
         List<Boolean> rowElements = Arrays.stream(elements)
                 .map(element -> element == 1)
                 .collect(Collectors.toList());
-        return new Row(rowElements);
+        return newRow(rowElements);
     }
 
     public Row createRow(@NotNull Boolean... elements) {
-        return new Row(Arrays.asList(elements));
+        return newRow(Arrays.asList(elements));
+    }
+
+    public List<Row> newRows(List<Row> rows) {
+        return rows.stream()
+                .map(this::newRow)
+                .collect(Collectors.toList());
+    }
+
+    public Row newRow(Row row) {
+        return newRow(newElements(row.getElements()));
+    }
+
+    public Row newRow(Column column) {
+        return newRow(newElements(column.getElements()));
+    }
+
+    public Row newRow(List<Boolean> elements) {
+        return new Row(newElements(elements));
+    }
+
+    private ArrayList<Boolean> newElements(List<Boolean> elements) {
+        return new ArrayList<>(elements);
     }
 }
