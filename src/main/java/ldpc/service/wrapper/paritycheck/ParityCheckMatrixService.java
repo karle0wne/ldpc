@@ -77,6 +77,10 @@ public class ParityCheckMatrixService {
         return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
+    public ParityCheckMatrix newParityCheckMatrix(ParityCheckMatrix parityCheckMatrix) {
+        return new ParityCheckMatrix(booleanMatrixService.newMatrix(parityCheckMatrix.getBooleanMatrix()));
+    }
+
     public ParityCheckMatrix newParityCheckMatrix(BooleanMatrix booleanMatrix) {
         return new ParityCheckMatrix(booleanMatrixService.newMatrix(booleanMatrix));
     }
