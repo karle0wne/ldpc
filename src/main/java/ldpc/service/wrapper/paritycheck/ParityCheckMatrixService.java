@@ -1,5 +1,6 @@
 package ldpc.service.wrapper.paritycheck;
 
+import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.basis.Row;
 import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
@@ -35,7 +36,7 @@ public class ParityCheckMatrixService {
         matrix.add(rowService.createRow(0, 1, 1, 0, 0, 1));
         matrix.add(rowService.createRow(0, 0, 1, 1, 1, 0));
         matrix.add(rowService.createRow(1, 0, 0, 1, 0, 1));
-        return new ParityCheckMatrix(booleanMatrixService.createMatrix(matrix));
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
     public ParityCheckMatrix preparedPCM2() {
@@ -43,8 +44,7 @@ public class ParityCheckMatrixService {
         matrix.add(rowService.createRow(0, 1, 1, 1, 1, 0, 0));
         matrix.add(rowService.createRow(1, 0, 1, 1, 0, 1, 0));
         matrix.add(rowService.createRow(1, 1, 0, 1, 0, 0, 1));
-
-        return new ParityCheckMatrix(booleanMatrixService.createMatrix(matrix));
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
     public ParityCheckMatrix preparedPCM3() {
@@ -54,7 +54,7 @@ public class ParityCheckMatrixService {
         matrix.add(rowService.createRow(0, 1, 0, 1, 1));
         matrix.add(rowService.createRow(0, 0, 0, 1, 1));
         matrix.add(rowService.createRow(1, 0, 0, 0, 1));
-        return new ParityCheckMatrix(booleanMatrixService.createMatrix(matrix));
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
     public ParityCheckMatrix preparedPCM4() {
@@ -74,6 +74,10 @@ public class ParityCheckMatrixService {
         matrix.add(rowService.createRow(0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0));
         matrix.add(rowService.createRow(0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0));
         matrix.add(rowService.createRow(0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
-        return new ParityCheckMatrix(booleanMatrixService.createMatrix(matrix));
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
+    }
+
+    public ParityCheckMatrix newParityCheckMatrix(BooleanMatrix booleanMatrix) {
+        return new ParityCheckMatrix(booleanMatrixService.newMatrix(booleanMatrix));
     }
 }

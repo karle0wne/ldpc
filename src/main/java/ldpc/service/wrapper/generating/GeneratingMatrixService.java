@@ -43,7 +43,7 @@ public class GeneratingMatrixService {
     * блок основных функций!
     * */
     public GeneratingMatrix getGeneratingMatrixFromParityCheckMatrix(ParityCheckMatrix parityCheckMatrix) {
-        BooleanMatrix booleanMatrix = parityCheckMatrix.getBooleanMatrix();
+        BooleanMatrix booleanMatrix = booleanMatrixService.copyMatrix(parityCheckMatrix.getBooleanMatrix());
         int iterator = 0;
 
         /*
@@ -69,13 +69,14 @@ public class GeneratingMatrixService {
                 /*
                 * Поиск не преобразованного элемента маски проверки в матрице
                 * */
-                int firstTruePosition = getFirstTruePosition(mask, columnMatrix);
+                int position = getFirstTruePosition(mask, columnMatrix);
 
-                if (firstTruePosition != DOES_NOT_EXIST) {
+                if (position != DOES_NOT_EXIST) {
+                    mask.getElements().set(position, false);
                     /*
                     * XOR строк матрицы для столбца
                     * */
-                    getIdentityColumnByFirstTruePositionColumn(booleanMatrix, mask, columnMatrix, firstTruePosition);
+                    additionalRowsByPosition(booleanMatrix, columnMatrix, position);
                 }
             }
 
@@ -87,7 +88,7 @@ public class GeneratingMatrixService {
             /*
             * создаем матрицу заново, тк матрица изменилась после удаления пустых строк
             * */
-            booleanMatrix = booleanMatrixService.createMatrix(booleanMatrix.getMatrix());
+            booleanMatrix = booleanMatrixService.copyMatrix(booleanMatrix.getMatrix());
 
             sortedRows(booleanMatrix);
 
@@ -102,13 +103,13 @@ public class GeneratingMatrixService {
         /*
         * создаем порождающую матрицу
         * */
-        BooleanMatrix booleanGeneratingMatrix = booleanMatrixService.createMatrix(rowService.mapColumnsToRows(columnsForGeneratingMatrix));
+        BooleanMatrix booleanGeneratingMatrix = booleanMatrixService.newMatrix(rowService.mapColumnsToRows(columnsForGeneratingMatrix));
 
         /*
         * добавляем единичную матрицу к порождающей
         * */
         booleanGeneratingMatrix = addIdentityMatrix(booleanGeneratingMatrix);
-        return new GeneratingMatrix(booleanGeneratingMatrix);
+        return newGeneratingMatrix(booleanGeneratingMatrix);
     }
 
     /*
@@ -130,16 +131,14 @@ public class GeneratingMatrixService {
                 .orElse(DOES_NOT_EXIST);
     }
 
-    private void getIdentityColumnByFirstTruePositionColumn(BooleanMatrix booleanMatrix, Column mask, Column columnMatrix, int firstTruePosition) {
-        mask.getElements().set(firstTruePosition, false);
-
+    private void additionalRowsByPosition(BooleanMatrix booleanMatrix, Column columnMatrix, int firstTruePosition) {
         List<Integer> changingTruePositions = booleanMatrixService.getPositionsTrueElementsWithoutFirst(columnMatrix.getElements(), firstTruePosition);
 
         for (Integer changingTruePosition : changingTruePositions) {
             Row currentRow = booleanMatrix.getMatrix().get(firstTruePosition);
             Row changingRow = booleanMatrix.getMatrix().get(changingTruePosition);
             List<Boolean> resultElements = booleanMatrixService.xor(currentRow.getElements(), changingRow.getElements());
-            Row resultRow = new Row(resultElements);
+            Row resultRow = rowService.newRow(resultElements);
             booleanMatrix.getMatrix().set(changingTruePosition, resultRow);
         }
     }
@@ -214,7 +213,7 @@ public class GeneratingMatrixService {
         for (int i = 0; i < booleanGeneratingMatrix.getSizeY(); i++) {
             matrix.get(i).getElements().addAll(identityMatrix.get(i).getElements());
         }
-        return booleanMatrixService.createMatrix(matrix);
+        return booleanMatrixService.newMatrix(matrix);
     }
 
     /*
@@ -225,7 +224,7 @@ public class GeneratingMatrixService {
         matrix.add(rowService.createRow(1, 1, 1, 1, 0, 0));
         matrix.add(rowService.createRow(0, 1, 1, 0, 1, 0));
         matrix.add(rowService.createRow(1, 1, 0, 0, 0, 1));
-        return new GeneratingMatrix(booleanMatrixService.createMatrix(matrix));
+        return newGeneratingMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
     public GeneratingMatrix preparedPGM2() {
@@ -234,6 +233,10 @@ public class GeneratingMatrixService {
         matrix.add(rowService.createRow(0, 1, 0, 0, 1, 0, 1));
         matrix.add(rowService.createRow(0, 0, 1, 0, 1, 1, 0));
         matrix.add(rowService.createRow(0, 0, 0, 1, 1, 1, 1));
-        return new GeneratingMatrix(booleanMatrixService.createMatrix(matrix));
+        return newGeneratingMatrix(booleanMatrixService.newMatrix(matrix));
+    }
+
+    public GeneratingMatrix newGeneratingMatrix(BooleanMatrix booleanMatrix) {
+        return new GeneratingMatrix(booleanMatrixService.newMatrix(booleanMatrix));
     }
 }
