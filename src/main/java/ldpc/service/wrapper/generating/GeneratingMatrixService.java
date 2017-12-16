@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 public class GeneratingMatrixService {
 
     public static final int DOES_NOT_EXIST = -1;
-    private static final int BORDER_FOR_EXCEPTION = 100;
+    public static final int BORDER_FOR_EXCEPTION = 100;
 
     private final RowService rowService;
 
