@@ -27,12 +27,6 @@ public class RowService {
         return falseElements.size() == row.getElements().size();
     }
 
-    public String rowToString(Row row) {
-        return row.getElements().stream()
-                .map(element -> element ? "1" : "0")
-                .collect(Collectors.joining(", "));
-    }
-
     /**
      * {@code createRow} предназначена для создания строки матрицы, можно сразу передавать boolean, но
      * если неудобно можно передавать в качестве параметра int элементы, причем если ошибочно будет передан элемент

@@ -37,7 +37,8 @@ public class LDPCMatrixService {
         long k = getK(parityCheckMatrix);
         long j = getJ(parityCheckMatrix);
         long g = getG(parityCheckMatrix);
-        return new StrictLowDensityParityCheckMatrix(parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix), k, j, g);
+        ParityCheckMatrix matrix = parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix);
+        return new StrictLowDensityParityCheckMatrix(matrix, k, j, g);
 
     }
 
@@ -81,10 +82,5 @@ public class LDPCMatrixService {
         BooleanMatrix booleanMatrix = parityCheckMatrix.getBooleanMatrix();
         // TODO: 10.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-20
         return 0;
-    }
-
-    public void print(StrictLowDensityParityCheckMatrix ldpcMatrix) {
-        booleanMatrixService.print(ldpcMatrix.getParityCheckMatrix().getBooleanMatrix());
-        System.out.println("J = " + ldpcMatrix.getJ() + "\n" + "K = " + ldpcMatrix.getK() + "\n" + "G = " + ldpcMatrix.getG() + "\n");
     }
 }

@@ -8,6 +8,7 @@ import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.basis.ColumnService;
 import ldpc.service.basis.RowService;
+import ldpc.util.template.ColumnPair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ import java.util.stream.IntStream;
 public class GeneratingMatrixService {
 
     public static final int DOES_NOT_EXIST = -1;
-    public static final int BORDER_FOR_EXCEPTION = 100;
+    private static final int BORDER_FOR_EXCEPTION = 100;
 
     private final RowService rowService;
 
@@ -42,7 +43,7 @@ public class GeneratingMatrixService {
     /*
     * блок основных функций!
     * */
-    public GeneratingMatrix getGeneratingMatrixFromParityCheckMatrix(ParityCheckMatrix parityCheckMatrix) {
+    public GeneratingMatrix getGeneratingMatrixFromParityCheckMatrix(ParityCheckMatrix parityCheckMatrix, List<ColumnPair> swapHistory) {
         BooleanMatrix booleanMatrix = booleanMatrixService.copyMatrix(parityCheckMatrix.getBooleanMatrix());
         int iterator = 0;
 
@@ -92,7 +93,7 @@ public class GeneratingMatrixService {
 
             sortedRows(booleanMatrix);
 
-            sortedColumns(booleanMatrix);
+            sortedColumns(booleanMatrix, swapHistory);
         }
 
         /*
@@ -174,7 +175,7 @@ public class GeneratingMatrixService {
         }
     }
 
-    private void sortedColumns(BooleanMatrix booleanMatrix) {
+    private void sortedColumns(BooleanMatrix booleanMatrix, List<ColumnPair> swapHistory) {
         List<Integer> unsortedRows = getUnsortedRows(booleanMatrix);
 
         List<Row> matrix = booleanMatrix.getMatrix();
@@ -186,6 +187,7 @@ public class GeneratingMatrixService {
                     List<Boolean> elements = matrix.get(i).getElements();
                     Collections.swap(elements, rowNumber, truePosition);
                 });
+                swapHistory.add(new ColumnPair(rowNumber, truePosition));
             }
         }
     }

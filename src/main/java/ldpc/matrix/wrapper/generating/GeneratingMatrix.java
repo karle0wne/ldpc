@@ -16,4 +16,9 @@ public class GeneratingMatrix {
     public BooleanMatrix getBooleanMatrix() {
         return booleanMatrix;
     }
+
+    @Override
+    public String toString() {
+        return String.join("\n", "ПОРОЖДАЮЩАЯ МАТРИЦА: ", booleanMatrix.toString());
+    }
 }

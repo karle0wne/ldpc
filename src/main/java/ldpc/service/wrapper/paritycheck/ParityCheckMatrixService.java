@@ -47,17 +47,7 @@ public class ParityCheckMatrixService {
         return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
-    public ParityCheckMatrix preparedPCM3() {
-        List<Row> matrix = new ArrayList<>();
-        matrix.add(rowService.createRow(1, 0, 1, 1, 0));
-        matrix.add(rowService.createRow(1, 1, 1, 0, 0));
-        matrix.add(rowService.createRow(0, 1, 0, 1, 1));
-        matrix.add(rowService.createRow(0, 0, 0, 1, 1));
-        matrix.add(rowService.createRow(1, 0, 0, 0, 1));
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
-    }
-
-    public ParityCheckMatrix preparedPCM4() {
+    public ParityCheckMatrix prepared_PCM_LDPC() {
         List<Row> matrix = new ArrayList<>();
         matrix.add(rowService.createRow(1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
         matrix.add(rowService.createRow(0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
