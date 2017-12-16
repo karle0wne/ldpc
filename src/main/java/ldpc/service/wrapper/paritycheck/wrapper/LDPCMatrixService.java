@@ -40,7 +40,7 @@ public class LDPCMatrixService {
         int iterator = 0;
 
         while (booleanMatrixService.getCountTrueElements(syndrome.getMatrix().get(0).getElements()) > 0) {
-            checkIterator(iterator);
+            iterator = checkIterator(iterator);
             // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-3 @d.getman
             // тут операции по декодированию localWord! ... .... ... ... ..
             // и в конце обновление синдрома проверки
