@@ -30,6 +30,12 @@ public class ParityCheckMatrixService {
     /*
     * блок обслуживающий создание матриц функций
     * */
+    public ParityCheckMatrix generateParityCheckMatrix() {
+        // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-13 @a.karlov
+        //а это мне, тут пезда
+        return prepared_PCM_LDPC();
+    }
+    
     public ParityCheckMatrix preparedPCM() {
         List<Row> matrix = new ArrayList<>();
         matrix.add(rowService.createRow(1, 1, 0, 0, 1, 0));
@@ -47,7 +53,7 @@ public class ParityCheckMatrixService {
         return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
-    public ParityCheckMatrix prepared_PCM_LDPC() {
+    private ParityCheckMatrix prepared_PCM_LDPC() {
         List<Row> matrix = new ArrayList<>();
         matrix.add(rowService.createRow(1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
         matrix.add(rowService.createRow(0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));

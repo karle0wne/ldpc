@@ -1,8 +1,8 @@
 package ldpc;
 
-import ldpc.service.StandService;
 import ldpc.service.wrapper.paritycheck.ParityCheckMatrixService;
 import ldpc.service.wrapper.paritycheck.wrapper.LDPCMatrixService;
+import ldpc.util.service.StandService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,11 @@ public class MainApplicationTest {
 
     @Test
     public void ldpc() {
-        standService.demoStandLDPC(ldpcMatrixService.newStrictLDPCMatrix(parityCheckMatrixService.prepared_PCM_LDPC()));
+        standService.demoStandLDPC(
+                ldpcMatrixService.newStrictLDPCMatrix(
+                        parityCheckMatrixService.generateParityCheckMatrix()
+                )
+        );
     }
 
     @Test

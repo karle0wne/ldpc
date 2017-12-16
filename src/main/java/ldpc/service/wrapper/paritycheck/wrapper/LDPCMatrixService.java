@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 
+import static ldpc.service.wrapper.generating.GeneratingMatrixService.BORDER_FOR_EXCEPTION;
+
 @Service
 public class LDPCMatrixService {
 
@@ -28,6 +30,23 @@ public class LDPCMatrixService {
         this.parityCheckMatrixService = parityCheckMatrixService;
         this.booleanMatrixService = booleanMatrixService;
         this.columnService = columnService;
+    }
+
+    public BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, BooleanMatrix codeWord) {
+        ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
+
+        BooleanMatrix localWord = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixService.newMatrix(codeWord));
+        BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);
+        int iterator = 0;
+
+        while (booleanMatrixService.getCountTrueElements(syndrome.getMatrix().get(0).getElements()) > 0) {
+            checkIterator(iterator);
+            // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-3 @d.getman
+            // тут операции по декодированию localWord! ... .... ... ... ..
+            // и в конце обновление синдрома проверки
+            syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);
+        }
+        return booleanMatrixService.newMatrix(localWord);
     }
 
     public StrictLowDensityParityCheckMatrix newStrictLDPCMatrix(ParityCheckMatrix parityCheckMatrix) {
@@ -80,7 +99,17 @@ public class LDPCMatrixService {
 
     private int getG(ParityCheckMatrix parityCheckMatrix) {
         BooleanMatrix booleanMatrix = parityCheckMatrix.getBooleanMatrix();
-        // TODO: 10.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-20
+        // TODO: 10.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-20 @e.kazakov
+        // егор, пиши блэд
         return 0;
+    }
+
+    private int checkIterator(int iterator) {
+        if (iterator < BORDER_FOR_EXCEPTION) {
+            iterator++;
+        } else {
+            throw new RuntimeException("Прошло " + BORDER_FOR_EXCEPTION + " циклов декодирования!");
+        }
+        return iterator;
     }
 }

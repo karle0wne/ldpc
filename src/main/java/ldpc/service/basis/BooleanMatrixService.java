@@ -37,6 +37,11 @@ public class BooleanMatrixService {
     /*
     * блок основных функций!
     * */
+    public BooleanMatrix breakDownCodeWordWithGaussianNoise(BooleanMatrix codeWord) {
+        // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-23
+        return newMatrix(codeWord);
+    }
+    
     public BooleanMatrix recoveryCodeWord(BooleanMatrix codeWord, List<ColumnPair> swapHistory) {
         List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(codeWord);
         int size = swapHistory.size();
