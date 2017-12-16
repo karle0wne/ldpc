@@ -14,9 +14,9 @@ public class StrictLowDensityParityCheckMatrix {
 
     /**
      * @param parityCheckMatrix сама матрица
-     * @param K             количество единиц в каждой строке
-     * @param J             количество единиц в каждом столбце
-     * @param G             обхват графа
+     * @param K                 количество единиц в каждой строке
+     * @param J                 количество единиц в каждом столбце
+     * @param G                 обхват графа
      */
     public StrictLowDensityParityCheckMatrix(ParityCheckMatrix parityCheckMatrix, long K, long J, long G) {
         this.parityCheckMatrix = parityCheckMatrix;
@@ -39,5 +39,14 @@ public class StrictLowDensityParityCheckMatrix {
 
     public long getG() {
         return G;
+    }
+
+    @Override
+    public String toString() {
+        String matrix = parityCheckMatrix.toString();
+        String k = "K = " + K;
+        String j = "J = " + J;
+        String g = "G = " + G;
+        return String.join("\n---\n", matrix, k, j, g);
     }
 }

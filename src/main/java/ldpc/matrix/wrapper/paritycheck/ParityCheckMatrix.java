@@ -16,4 +16,9 @@ public class ParityCheckMatrix {
     public BooleanMatrix getBooleanMatrix() {
         return booleanMatrix;
     }
+
+    @Override
+    public String toString() {
+        return String.join("\n", "ПРОВЕРОЧНАЯ МАТРИЦА: ", booleanMatrix.toString());
+    }
 }

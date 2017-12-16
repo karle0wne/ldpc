@@ -3,6 +3,7 @@ package ldpc.service.basis;
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.basis.Column;
 import ldpc.matrix.basis.Row;
+import ldpc.util.template.ColumnPair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,21 @@ public class BooleanMatrixService {
     /*
     * блок основных функций!
     * */
+    public BooleanMatrix recoveryCodeWord(BooleanMatrix codeWord, List<ColumnPair> swapHistory) {
+        List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(codeWord);
+        int size = swapHistory.size();
+        IntStream.iterate(size - 1, i -> i - 1)
+                .limit(size)
+                .forEach(i ->
+                        Collections.swap(
+                                matrix,
+                                swapHistory.get(i).getColumnNumberRight(),
+                                swapHistory.get(i).getColumnNumberLeft()
+                        )
+                );
+        return getTransposedBooleanMatrix(newMatrix(rowService.mapColumnsToRows(matrix)));
+    }
+
     public BooleanMatrix getTransposedBooleanMatrix(BooleanMatrix booleanMatrix) {
         List<Column> columns = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
         List<Row> rows = rowService.mapColumnsToRows(columns);
@@ -143,28 +159,26 @@ public class BooleanMatrixService {
         return columnService.newColumn(generateElements(booleanMatrix.getSizeY(), true));
     }
 
-    public double getDensity(BooleanMatrix booleanMatrix) {
-        List<Row> matrix = booleanMatrix.getMatrix();
+    private double getDensity(List<Row> matrix) {
         long count = matrix.stream()
                 .mapToLong(row -> getCountTrueElements(row.getElements()))
                 .sum();
-        int countElements = booleanMatrix.getSizeY() * booleanMatrix.getSizeX();
+        int countElements = matrix.size() * matrix.get(0).getElements().size();
         return getPercentage(count, countElements);
     }
 
     /*
     * блок обслуживающий вывод и создание матриц функций
     * */
-    public BooleanMatrix preparedInfoWord() {
-        return newWord(1, 1, 1);
-    }
-
-    public BooleanMatrix preparedInfoWord2() {
-        return newWord(1, 1, 1, 0);
-    }
-
-    public BooleanMatrix preparedInfoWord3() {
-        return newWord(1, 1, 1, 0, 1, 1, 1);
+    public BooleanMatrix generateInfoWord(int size) {
+        List<Boolean> elements = generateElements(size, false);
+        Random random = new Random();
+        while (getCountTrueElements(elements) == 0) {
+            elements = IntStream.range(0, size)
+                    .mapToObj(value -> random.nextBoolean())
+                    .collect(Collectors.toList());
+        }
+        return newWord(elements);
     }
 
     public BooleanMatrix newWord(@NotNull Integer... elements) {
@@ -201,7 +215,7 @@ public class BooleanMatrixService {
             throw new RuntimeException("Укажите матрицу с одинаковым количеством элементов в строках!");
         }
 
-        return new BooleanMatrix(rowService.newRows(rows), maxRowSize, rows.size());
+        return new BooleanMatrix(rowService.newRows(rows), maxRowSize, rows.size(), getDensity(rows));
     }
 
     public BooleanMatrix copyMatrix(BooleanMatrix booleanMatrix) {
@@ -223,14 +237,6 @@ public class BooleanMatrixService {
             throw new RuntimeException("Укажите матрицу с одинаковым количеством элементов в строках!");
         }
 
-        return new BooleanMatrix(rows, maxRowSize, rows.size());
-    }
-
-    public void print(BooleanMatrix booleanMatrix) {
-        System.out.println(
-                booleanMatrix.getMatrix().stream()
-                        .map(rowService::rowToString)
-                        .collect(Collectors.joining(" \n")) + "\n"
-        );
+        return new BooleanMatrix(rows, maxRowSize, rows.size(), getDensity(rows));
     }
 }
