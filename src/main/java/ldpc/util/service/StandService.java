@@ -57,7 +57,7 @@ public class StandService {
 
         BooleanMatrix brokenCodeWord = booleanMatrixService.breakDownCodeWordWithGaussianNoise(recoveryCodeWord);
 
-        BooleanMatrix decodedCodeWord = ldpcMatrixService.decode(matrix, recoveryCodeWord);
+        BooleanMatrix decodedCodeWord = ldpcMatrixService.decode(matrix, brokenCodeWord);
 
         BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), decodedCodeWord);
 
