@@ -41,7 +41,7 @@ public class BooleanMatrixService {
         // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-23
         return newMatrix(codeWord);
     }
-    
+
     public BooleanMatrix recoveryCodeWord(BooleanMatrix codeWord, List<ColumnPair> swapHistory) {
         List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(codeWord);
         int size = swapHistory.size();
@@ -96,7 +96,7 @@ public class BooleanMatrixService {
         return (leftBooleanMatrix.getSizeX() == rightBooleanMatrix.getSizeY());
     }
 
-    private List<Integer> getPositionsTrueElements(List<Boolean> elements) {
+    public List<Integer> getPositionsTrueElements(List<Boolean> elements) {
         return IntStream.range(0, elements.size())
                 .filter(elements::get)
                 .boxed()
@@ -170,6 +170,40 @@ public class BooleanMatrixService {
                 .sum();
         int countElements = matrix.size() * matrix.get(0).getElements().size();
         return getPercentage(count, countElements);
+    }
+
+    public BooleanMatrix removeColumns(BooleanMatrix booleanMatrix, List<Integer> columns) {
+        columns.sort(Comparator.comparing(Integer::intValue));
+        BooleanMatrix newBooleanMatrix = newMatrix(booleanMatrix);
+        for (int i = columns.size() - 1; i >= 0; i--) {
+            newBooleanMatrix = removeColumn(newBooleanMatrix, columns.get(i));
+        }
+        return newMatrix(newBooleanMatrix);
+    }
+
+    public BooleanMatrix removeColumn(BooleanMatrix booleanMatrix, int column) {
+        BooleanMatrix newBooleanMatrix = newMatrix(booleanMatrix);
+        newBooleanMatrix.getMatrix()
+                .forEach(row -> row.getElements().remove(column));
+        return newMatrix(newBooleanMatrix);
+    }
+
+    public boolean isEmpty(BooleanMatrix booleanMatrix) {
+        List<Row> rows = booleanMatrix.getMatrix();
+        if (rows.isEmpty()) {
+            return true;
+        }
+
+        List<Boolean> rowIsEmpties = rows.stream()
+                .map(Row::getElements)
+                .map(List::isEmpty)
+                .collect(Collectors.toList());
+        for (Boolean rowIsEmpty : rowIsEmpties) {
+            if (!rowIsEmpty) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /*
