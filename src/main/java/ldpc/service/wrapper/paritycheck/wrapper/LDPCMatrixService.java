@@ -11,8 +11,8 @@ import ldpc.service.wrapper.paritycheck.ParityCheckMatrixService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static ldpc.service.wrapper.generating.GeneratingMatrixService.BORDER_FOR_EXCEPTION;
 
@@ -42,8 +42,6 @@ public class LDPCMatrixService {
         while (booleanMatrixService.getCountTrueElements(syndrome.getMatrix().get(0).getElements()) > 0) {
             iterator = checkIterator(iterator);
             // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-3 @d.getman
-            // тут операции по декодированию localWord! ... .... ... ... ..
-            // и в конце обновление синдрома проверки
             syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);
         }
         return booleanMatrixService.newMatrix(localWord);
@@ -98,10 +96,55 @@ public class LDPCMatrixService {
     }
 
     private int getG(ParityCheckMatrix parityCheckMatrix) {
-        BooleanMatrix booleanMatrix = parityCheckMatrix.getBooleanMatrix();
-        // TODO: 10.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-20 @e.kazakov
-        // егор, пиши блэд
-        return 0;
+        BooleanMatrix booleanMatrixStart = booleanMatrixService.newMatrix(parityCheckMatrix.getBooleanMatrix());
+        int tier_level;
+
+        for (int i = 0; i < booleanMatrixStart.getSizeY(); i++) {
+
+            List<Integer> columnsForDelete = booleanMatrixService.getPositionsTrueElements(booleanMatrixStart.getMatrix().get(i).getElements());
+
+            BooleanMatrix transposedBooleanMatrix = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixStart);
+
+            BooleanMatrix booleanMatrix = booleanMatrixService.removeColumn(transposedBooleanMatrix, i);
+
+            for (tier_level = 0; !booleanMatrixService.isEmpty(booleanMatrix) && !checkNotUniqueness(columnsForDelete); tier_level++) {
+
+                List<Integer> columnsForDeleteForNextTierLevel = getColumnsForDelete(columnsForDelete, booleanMatrix);
+
+                transposedBooleanMatrix = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixService.newMatrix(booleanMatrix));
+
+                booleanMatrix = booleanMatrixService.removeColumns(transposedBooleanMatrix, columnsForDelete);
+
+                columnsForDelete = new ArrayList<>(columnsForDeleteForNextTierLevel);
+            }
+
+            if (checkNotUniqueness(columnsForDelete)) {
+                return (tier_level + 1) * 2;
+            }
+        }
+        throw new RuntimeException("Не могу посчитать обхват матрицы G, проверьте алгоритм и матрицу!");
+    }
+
+    private List<Integer> getColumnsForDelete(List<Integer> numbersRowsForSearch, BooleanMatrix booleanMatrix) {
+        return numbersRowsForSearch.stream()
+                .flatMap(
+                        numberRow -> {
+                            Row row = booleanMatrix.getMatrix().get(numberRow);
+                            return booleanMatrixService.getPositionsTrueElements(row.getElements()).stream();
+                        }
+                )
+                .collect(Collectors.toList());
+    }
+
+    private boolean checkNotUniqueness(List<Integer> columns) {
+        columns.sort(Comparator.comparing(Integer::intValue));
+        Set<Integer> uniques = new HashSet<>();
+        for (Integer column : columns) {
+            if (!uniques.add(column)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int checkIterator(int iterator) {
