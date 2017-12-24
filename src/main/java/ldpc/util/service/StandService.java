@@ -8,12 +8,8 @@ import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.wrapper.generating.GeneratingMatrixService;
 import ldpc.service.wrapper.paritycheck.ParityCheckMatrixService;
 import ldpc.service.wrapper.paritycheck.wrapper.LDPCMatrixService;
-import ldpc.util.template.ColumnPair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class StandService {
@@ -26,47 +22,36 @@ public class StandService {
 
     private final ParityCheckMatrixService parityCheckMatrixService;
 
-    private final ColumnPairService columnPairService;
-
     private final LDPCMatrixService ldpcMatrixService;
 
     @Autowired
-    public StandService(BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, ParityCheckMatrixService parityCheckMatrixService, ColumnPairService columnPairService, LDPCMatrixService ldpcMatrixService) {
+    public StandService(BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, ParityCheckMatrixService parityCheckMatrixService, LDPCMatrixService ldpcMatrixService) {
         this.booleanMatrixService = booleanMatrixService;
         this.generatingMatrixService = generatingMatrixService;
         this.parityCheckMatrixService = parityCheckMatrixService;
-        this.columnPairService = columnPairService;
         this.ldpcMatrixService = ldpcMatrixService;
     }
 
     public void demoStandLDPC(StrictLowDensityParityCheckMatrix matrix) {
-        List<ColumnPair> swapHistory = new ArrayList<>();
         ParityCheckMatrix parityCheckMatrix = matrix.getParityCheckMatrix();
 
-        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(
-                parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix),
-                swapHistory
-        );
+        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix));
 
         BooleanMatrix informationWord = booleanMatrixService.generateInfoWord(generatingMatrix.getBooleanMatrix().getSizeY());
 
-        BooleanMatrix recoveryCodeWord = booleanMatrixService.recoveryCodeWord(
-                booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix()),
-                swapHistory
-        );
+        BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
 
-        BooleanMatrix brokenCodeWord = booleanMatrixService.breakDownCodeWordWithGaussianNoise(recoveryCodeWord);
+        BooleanMatrix brokenCodeWord = booleanMatrixService.breakDownCodeWordWithGaussianNoise(codeWord);
 
         BooleanMatrix decodedCodeWord = ldpcMatrixService.decode(matrix, brokenCodeWord);
 
         BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), decodedCodeWord);
 
-        showToConsole(matrix, generatingMatrix, swapHistory, informationWord, recoveryCodeWord, brokenCodeWord, decodedCodeWord, syndrome);
+        showToConsole(matrix, generatingMatrix, informationWord, codeWord, brokenCodeWord, decodedCodeWord, syndrome);
     }
 
     private void showToConsole(StrictLowDensityParityCheckMatrix matrix,
                                GeneratingMatrix generatingMatrix,
-                               List<ColumnPair> swapHistory,
                                BooleanMatrix informationWord,
                                BooleanMatrix recoveryCodeWord,
                                BooleanMatrix brokenCodeWord,
@@ -76,10 +61,6 @@ public class StandService {
 
         System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
         System.out.println(informationWord.getMatrix().get(0).toString() + DELIMITER);
-
-        if (!swapHistory.isEmpty()) {
-            System.out.println(columnPairService.arrayToString(swapHistory) + DELIMITER);
-        }
 
         System.out.println("ВОССТАНОВЛЕННОЕ С ПОМОЩЬЮ ИСТОРИИ ПЕРЕСТАНОВОК КОДОВОЕ СЛОВО: ");
         System.out.println(recoveryCodeWord.getMatrix().get(0).toString() + DELIMITER);
@@ -106,31 +87,19 @@ public class StandService {
     }
 
     public void demoStandWithoutLDPC(ParityCheckMatrix parityCheckMatrix) {
-        List<ColumnPair> swapHistory = new ArrayList<>();
-
-        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(
-                parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix),
-                swapHistory
-        );
+        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix));
 
         BooleanMatrix informationWord = booleanMatrixService.generateInfoWord(generatingMatrix.getBooleanMatrix().getSizeY());
 
-        BooleanMatrix recoveryCodeWord = booleanMatrixService.recoveryCodeWord(
-                booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix()),
-                swapHistory
-        );
+        BooleanMatrix recoveryCodeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
 
-        BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(
-                parityCheckMatrix.getBooleanMatrix(),
-                booleanMatrixService.getTransposedBooleanMatrix(recoveryCodeWord)
-        );
+        BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), booleanMatrixService.getTransposedBooleanMatrix(recoveryCodeWord));
 
-        showToConsole(parityCheckMatrix, generatingMatrix, swapHistory, informationWord, recoveryCodeWord, syndrome);
+        showToConsole(parityCheckMatrix, generatingMatrix, informationWord, recoveryCodeWord, syndrome);
     }
 
     private void showToConsole(ParityCheckMatrix parityCheckMatrix,
                                GeneratingMatrix generatingMatrix,
-                               List<ColumnPair> swapHistory,
                                BooleanMatrix informationWord,
                                BooleanMatrix recoveryCodeWord,
                                BooleanMatrix syndrome) {
@@ -138,10 +107,6 @@ public class StandService {
 
         System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
         System.out.println(informationWord.getMatrix().get(0).toString() + DELIMITER);
-
-        if (!swapHistory.isEmpty()) {
-            System.out.println(columnPairService.arrayToString(swapHistory) + DELIMITER);
-        }
 
         System.out.println("ВОССТАНОВЛЕННОЕ С ПОМОЩЬЮ ИСТОРИИ ПЕРЕСТАНОВОК КОДОВОЕ СЛОВО: ");
         System.out.println(recoveryCodeWord.getMatrix().get(0).toString() + DELIMITER);
