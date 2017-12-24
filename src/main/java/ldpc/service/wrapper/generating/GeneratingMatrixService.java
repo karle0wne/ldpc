@@ -43,9 +43,10 @@ public class GeneratingMatrixService {
     /*
     * блок основных функций!
     * */
-    public GeneratingMatrix getGeneratingMatrixFromParityCheckMatrix(ParityCheckMatrix parityCheckMatrix, List<ColumnPair> swapHistory) {
+    public GeneratingMatrix getGeneratingMatrixFromParityCheckMatrix(ParityCheckMatrix parityCheckMatrix) {
         BooleanMatrix booleanMatrix = booleanMatrixService.copyMatrix(parityCheckMatrix.getBooleanMatrix());
         int iterator = 0;
+        List<ColumnPair> swapHistory = new ArrayList<>();
 
         /*
         * Получение маски проверки
@@ -110,7 +111,13 @@ public class GeneratingMatrixService {
         * добавляем единичную матрицу к порождающей
         * */
         booleanGeneratingMatrix = addIdentityMatrix(booleanGeneratingMatrix);
-        return newGeneratingMatrix(booleanGeneratingMatrix);
+
+        GeneratingMatrix generatingMatrix = newGeneratingMatrix(booleanGeneratingMatrix);
+
+        /*
+        * восстанавливаем порядок столбцов в порождающей матрице
+        * */
+        return newGeneratingMatrix(booleanMatrixService.recoveryCodeWord(generatingMatrix.getBooleanMatrix(), swapHistory));
     }
 
     /*
