@@ -39,7 +39,7 @@ public class LDPCMatrixService {
         BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);
         int iterator = 0;
 
-        while (booleanMatrixService.getCountTrueElements(syndrome.getMatrix().get(0).getElements()) > 0) {
+        while (booleanMatrixService.getCountTrueElements(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).getElements()) > 0) {
             iterator = checkIterator(iterator);
             // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-3 @d.getman
             syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);

@@ -20,11 +20,12 @@ public class RowService {
     }
 
     public boolean isFullFalseElementsRow(Row row) {
-        List<Boolean> falseElements = row.getElements().stream()
+        List<Boolean> elements = row.getElements();
+        List<Boolean> falseElements = elements.stream()
                 .filter(element -> !element)
                 .collect(Collectors.toList());
 
-        return falseElements.size() == row.getElements().size();
+        return falseElements.size() == elements.size();
     }
 
     /**

@@ -24,12 +24,15 @@ public class StandService {
 
     private final LDPCMatrixService ldpcMatrixService;
 
+    private final BinarySymmetricChannelService binarySymmetricChannelService;
+
     @Autowired
-    public StandService(BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, ParityCheckMatrixService parityCheckMatrixService, LDPCMatrixService ldpcMatrixService) {
+    public StandService(BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, ParityCheckMatrixService parityCheckMatrixService, LDPCMatrixService ldpcMatrixService, BinarySymmetricChannelService binarySymmetricChannelService) {
         this.booleanMatrixService = booleanMatrixService;
         this.generatingMatrixService = generatingMatrixService;
         this.parityCheckMatrixService = parityCheckMatrixService;
         this.ldpcMatrixService = ldpcMatrixService;
+        this.binarySymmetricChannelService = binarySymmetricChannelService;
     }
 
     public void demoStandLDPC(StrictLowDensityParityCheckMatrix matrix) {
@@ -41,7 +44,8 @@ public class StandService {
 
         BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
 
-        BooleanMatrix brokenCodeWord = booleanMatrixService.breakDownCodeWordWithGaussianNoise(codeWord);
+        BooleanMatrix brokenCodeWord = booleanMatrixService.breakDownByChannel(codeWord);
+//        BooleanMatrix brokenCodeWord = binarySymmetricChannelService.send(codeWord,0.01D);
 
         BooleanMatrix decodedCodeWord = ldpcMatrixService.decode(matrix, brokenCodeWord);
 
@@ -62,7 +66,7 @@ public class StandService {
         System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
         System.out.println(informationWord.getMatrix().get(0).toString() + DELIMITER);
 
-        System.out.println("ВОССТАНОВЛЕННОЕ С ПОМОЩЬЮ ИСТОРИИ ПЕРЕСТАНОВОК КОДОВОЕ СЛОВО: ");
+        System.out.println("КОДОВОЕ СЛОВО: ");
         System.out.println(recoveryCodeWord.getMatrix().get(0).toString() + DELIMITER);
 
         System.out.println("---------------");
@@ -82,7 +86,7 @@ public class StandService {
         System.out.println("ДЕКОДИРОВАННОЕ КОДОВОЕ СЛОВО:");
         System.out.println(booleanMatrixService.getTransposedBooleanMatrix(decodedCodeWord).getMatrix().get(0).toString() + DELIMITER);
 
-        System.out.println("ПЕРЕМНОЖЕНИЕ {ТРАНСПОНИРОВАННОГО ДЕКОДИРОВАННОГО СООБЩЕНИЯ} НА {ПРОВЕРОЧНУЮ МАТРИЦУ} (и транспонирование для удобства)");
+        System.out.println("СИНДРОМ ПРОВЕРКИ");
         System.out.println(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).toString() + DELIMITER);
     }
 
@@ -108,7 +112,7 @@ public class StandService {
         System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
         System.out.println(informationWord.getMatrix().get(0).toString() + DELIMITER);
 
-        System.out.println("ВОССТАНОВЛЕННОЕ С ПОМОЩЬЮ ИСТОРИИ ПЕРЕСТАНОВОК КОДОВОЕ СЛОВО: ");
+        System.out.println("КОДОВОЕ СЛОВО: ");
         System.out.println(recoveryCodeWord.getMatrix().get(0).toString() + DELIMITER);
 
         System.out.println("---------------");
@@ -117,7 +121,7 @@ public class StandService {
 
         System.out.println(parityCheckMatrix.toString() + DELIMITER);
 
-        System.out.println("ПЕРЕМНОЖЕНИЕ ТРАНСПОНИРОВАННОГО СООБЩЕНИЯ НА ПРОВЕРОЧНУЮ МАТРИЦУ (и транспонирование для удобства)");
+        System.out.println("СИНДРОМ ПРОВЕРКИ");
         System.out.println(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).toString() + DELIMITER);
     }
 }
