@@ -45,7 +45,7 @@ public class GeneratingMatrixService {
     * блок основных функций!
     * */
     public GeneratingMatrix getGeneratingMatrixFromParityCheckMatrix(ParityCheckMatrix parityCheckMatrix) {
-        BooleanMatrix booleanMatrix = booleanMatrixService.copyMatrix(parityCheckMatrix.getBooleanMatrix());
+        BooleanMatrix booleanMatrix = booleanMatrixService.newMatrix(parityCheckMatrix.getBooleanMatrix());
         int iterator = 0;
         List<ColumnPair> swapHistory = new ArrayList<>();
 
@@ -89,7 +89,7 @@ public class GeneratingMatrixService {
             removeEmptyRows(booleanMatrix, mask);
 
             /*
-            * создаем матрицу заново, тк матрица изменилась после удаления пустых строк
+            * Обновляем параметры, которые рассчитываются при создании, тк матрица изменилась после удаления пустых строк
             * */
             booleanMatrix = booleanMatrixService.copyMatrix(booleanMatrix.getMatrix());
 
@@ -101,22 +101,17 @@ public class GeneratingMatrixService {
         /*
         * Извлекаем столбцы с зависимыми элементами матрицы (то есть матрица без единичной матричной части)
         * */
-        List<Column> columnsForGeneratingMatrix = getMatrixWithoutIdentityMatrix(booleanMatrix);
+        BooleanMatrix booleanGeneratingMatrix = getMatrixWithoutIdentityMatrix(booleanMatrix);
 
         /*
-        * создаем порождающую матрицу
-        * */
-        BooleanMatrix booleanGeneratingMatrix = booleanMatrixService.newMatrix(rowService.mapColumnsToRows(columnsForGeneratingMatrix));
-
-        /*
-        * добавляем единичную матрицу к порождающей
+        * Добавляем единичную матрицу к порождающей
         * */
         booleanGeneratingMatrix = addIdentityMatrix(booleanGeneratingMatrix);
 
         GeneratingMatrix generatingMatrix = newGeneratingMatrix(booleanGeneratingMatrix);
 
         /*
-        * восстанавливаем порядок столбцов в порождающей матрице
+        * Восстанавливаем порядок столбцов в порождающей матрице
         * */
         return newGeneratingMatrix(booleanMatrixService.recoveryBySwapHistory(generatingMatrix.getBooleanMatrix(), swapHistory));
     }
@@ -205,11 +200,15 @@ public class GeneratingMatrixService {
                 .collect(Collectors.toList());
     }
 
-    private List<Column> getMatrixWithoutIdentityMatrix(BooleanMatrix booleanMatrix) {
+    private BooleanMatrix getMatrixWithoutIdentityMatrix(BooleanMatrix booleanMatrix) {
+        if (!getUnsortedRows(booleanMatrix).isEmpty()) {
+            throw new RuntimeException("Приведите матрицу к виду [I]|[T] !");
+        }
         List<Column> allColumnsByBooleanMatrix = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
-        return IntStream.range(booleanMatrix.getSizeY(), booleanMatrix.getSizeX())
+        List<Column> columns = IntStream.range(booleanMatrix.getSizeY(), booleanMatrix.getSizeX())
                 .mapToObj(allColumnsByBooleanMatrix::get)
                 .collect(Collectors.toList());
+        return booleanMatrixService.newMatrix(rowService.mapColumnsToRows(columns));
     }
 
     private BooleanMatrix addIdentityMatrix(BooleanMatrix booleanGeneratingMatrix) {

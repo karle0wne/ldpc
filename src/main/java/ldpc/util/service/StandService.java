@@ -8,6 +8,9 @@ import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.wrapper.generating.GeneratingMatrixService;
 import ldpc.service.wrapper.paritycheck.ParityCheckMatrixService;
 import ldpc.service.wrapper.paritycheck.wrapper.LDPCMatrixService;
+import ldpc.util.service.channel.ChannelService;
+import ldpc.util.service.decode.DecodeService;
+import ldpc.util.template.LDPCEnums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,36 +23,40 @@ public class StandService {
 
     private final GeneratingMatrixService generatingMatrixService;
 
-    private final ParityCheckMatrixService parityCheckMatrixService;
-
     private final LDPCMatrixService ldpcMatrixService;
 
-    private final BinarySymmetricChannelService binarySymmetricChannelService;
+    private final ChannelService channelService;
+
+    private final DecodeService decodeService;
+
+    private final ParityCheckMatrixService parityCheckMatrixService;
 
     @Autowired
-    public StandService(BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, ParityCheckMatrixService parityCheckMatrixService, LDPCMatrixService ldpcMatrixService, BinarySymmetricChannelService binarySymmetricChannelService) {
+    public StandService(BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, LDPCMatrixService ldpcMatrixService, ChannelService channelService, DecodeService decodeService, ParityCheckMatrixService parityCheckMatrixService) {
         this.booleanMatrixService = booleanMatrixService;
         this.generatingMatrixService = generatingMatrixService;
-        this.parityCheckMatrixService = parityCheckMatrixService;
         this.ldpcMatrixService = ldpcMatrixService;
-        this.binarySymmetricChannelService = binarySymmetricChannelService;
+        this.channelService = channelService;
+        this.decodeService = decodeService;
+        this.parityCheckMatrixService = parityCheckMatrixService;
     }
 
-    public void demoStandLDPC(StrictLowDensityParityCheckMatrix matrix) {
-        ParityCheckMatrix parityCheckMatrix = matrix.getParityCheckMatrix();
+    public void demoStandLDPC(LDPCEnums.TypeOfCoding typeOfCoding,
+                              LDPCEnums.TypeOfChannel typeOfChannel,
+                              LDPCEnums.TypeOfDecoding typeOfDecoding) {
+        StrictLowDensityParityCheckMatrix matrix = ldpcMatrixService.generateLDPCMatrix(typeOfCoding);
 
-        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix));
+        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(matrix.getParityCheckMatrix());
 
         BooleanMatrix informationWord = booleanMatrixService.generateInfoWord(generatingMatrix.getBooleanMatrix().getSizeY());
 
         BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
 
-        BooleanMatrix brokenCodeWord = booleanMatrixService.breakDownByChannel(codeWord);
-//        BooleanMatrix brokenCodeWord = binarySymmetricChannelService.send(codeWord,0.01D);
+        BooleanMatrix brokenCodeWord = channelService.send(codeWord, typeOfChannel);
 
-        BooleanMatrix decodedCodeWord = ldpcMatrixService.decode(matrix, brokenCodeWord);
+        BooleanMatrix decodedCodeWord = decodeService.decode(matrix, brokenCodeWord, typeOfDecoding);
 
-        BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), decodedCodeWord);
+        BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(matrix.getParityCheckMatrix().getBooleanMatrix(), decodedCodeWord);
 
         showToConsole(matrix, generatingMatrix, informationWord, codeWord, brokenCodeWord, decodedCodeWord, syndrome);
     }
@@ -61,6 +68,8 @@ public class StandService {
                                BooleanMatrix brokenCodeWord,
                                BooleanMatrix decodedCodeWord,
                                BooleanMatrix syndrome) {
+        System.out.println("----------ТЕСТ----------" + DELIMITER);
+
         System.out.println(generatingMatrix.toString() + DELIMITER);
 
         System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
@@ -90,8 +99,10 @@ public class StandService {
         System.out.println(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).toString() + DELIMITER);
     }
 
-    public void demoStandWithoutLDPC(ParityCheckMatrix parityCheckMatrix) {
-        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix));
+    public void demoStandWithoutLDPC(LDPCEnums.TypeOfCoding typeOfCoding) {
+        ParityCheckMatrix parityCheckMatrix = parityCheckMatrixService.generateParityCheckMatrix(typeOfCoding);
+
+        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(parityCheckMatrix);
 
         BooleanMatrix informationWord = booleanMatrixService.generateInfoWord(generatingMatrix.getBooleanMatrix().getSizeY());
 
@@ -107,6 +118,8 @@ public class StandService {
                                BooleanMatrix informationWord,
                                BooleanMatrix recoveryCodeWord,
                                BooleanMatrix syndrome) {
+        System.out.println("----------ТЕСТ БЕЗ ЛДПС----------" + DELIMITER
+        );
         System.out.println(generatingMatrix.toString() + DELIMITER);
 
         System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");

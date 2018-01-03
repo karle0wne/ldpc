@@ -1,4 +1,4 @@
-package ldpc.util.service;
+package ldpc.util.service.channel;
 
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.basis.Row;
@@ -28,7 +28,7 @@ public class BinarySymmetricChannelService {
         this.booleanMatrixService = booleanMatrixService;
     }
 
-    public BooleanMatrix send(BooleanMatrix booleanMatrix, double errorChance) {
+    BooleanMatrix send(BooleanMatrix booleanMatrix, double errorChance) {
         List<Row> matrix = booleanMatrix.getMatrix();
         double border = getBorder(errorChance);
         TOP_BORDER = DESIRED_MEAN + border;
