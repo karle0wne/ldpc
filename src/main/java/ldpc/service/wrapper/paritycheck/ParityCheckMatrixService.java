@@ -5,6 +5,7 @@ import ldpc.matrix.basis.Row;
 import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.basis.RowService;
+import ldpc.util.template.LDPCEnums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,21 +31,23 @@ public class ParityCheckMatrixService {
     /*
     * блок обслуживающий создание матриц функций
     * */
-    public ParityCheckMatrix generateParityCheckMatrix() {
-        // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-13 @a.karlov
-        return prepared_PCM_LDPC();
-    }
-    
-    public ParityCheckMatrix preparedPCM() {
-        List<Row> matrix = new ArrayList<>();
-        matrix.add(rowService.createRow(1, 1, 0, 0, 1, 0));
-        matrix.add(rowService.createRow(0, 1, 1, 0, 0, 1));
-        matrix.add(rowService.createRow(0, 0, 1, 1, 1, 0));
-        matrix.add(rowService.createRow(1, 0, 0, 1, 0, 1));
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
+    public ParityCheckMatrix generateParityCheckMatrix(LDPCEnums.TypeOfCoding typeOfCoding) {
+        switch (typeOfCoding) {
+            case LDPC_DUMMY_ONE:
+                // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-13, потом убрать другие кейзы
+                return prepared_PCM_LDPC();
+            case LDPC_DUMMY_TWO:
+                return prepared_PCM_LDPC1();
+            case LDPC_DUMMY_THREE:
+                return prepared_PCM_LDPC2();
+            case PCM_DUMMY:
+                return preparedPCM();
+            default:
+                return prepared_PCM_LDPC();
+        }
     }
 
-    public ParityCheckMatrix preparedPCM2() {
+    private ParityCheckMatrix preparedPCM() {
         List<Row> matrix = new ArrayList<>();
         matrix.add(rowService.createRow(0, 1, 1, 1, 1, 0, 0));
         matrix.add(rowService.createRow(1, 0, 1, 1, 0, 1, 0));
@@ -69,6 +72,15 @@ public class ParityCheckMatrixService {
         matrix.add(rowService.createRow(0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0));
         matrix.add(rowService.createRow(0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0));
         matrix.add(rowService.createRow(0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
+    }
+
+    private ParityCheckMatrix prepared_PCM_LDPC1() {
+        List<Row> matrix = new ArrayList<>();
+        matrix.add(rowService.createRow(1, 1, 0, 0, 1, 0));
+        matrix.add(rowService.createRow(0, 1, 1, 0, 0, 1));
+        matrix.add(rowService.createRow(0, 0, 1, 1, 1, 0));
+        matrix.add(rowService.createRow(1, 0, 0, 1, 0, 1));
         return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 

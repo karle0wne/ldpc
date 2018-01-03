@@ -37,10 +37,6 @@ public class BooleanMatrixService {
     /*
     * блок основных функций!
     * */
-    public BooleanMatrix breakDownByChannel(BooleanMatrix codeWord) {
-        // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-23
-        return newMatrix(codeWord);
-    }
 
     public BooleanMatrix recoveryBySwapHistory(BooleanMatrix booleanMatrix, List<ColumnPair> swapHistory) {
         List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);

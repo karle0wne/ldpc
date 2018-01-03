@@ -8,13 +8,12 @@ import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.basis.ColumnService;
 import ldpc.service.wrapper.paritycheck.ParityCheckMatrixService;
+import ldpc.util.template.LDPCEnums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static ldpc.service.wrapper.generating.GeneratingMatrixService.BORDER_FOR_EXCEPTION;
 
 @Service
 public class LDPCMatrixService {
@@ -32,19 +31,9 @@ public class LDPCMatrixService {
         this.columnService = columnService;
     }
 
-    public BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, BooleanMatrix codeWord) {
-        ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
-
-        BooleanMatrix localWord = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixService.newMatrix(codeWord));
-        BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);
-        int iterator = 0;
-
-        while (booleanMatrixService.getCountTrueElements(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).getElements()) > 0) {
-            iterator = checkIterator(iterator);
-            // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-3 @d.getman
-            syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);
-        }
-        return booleanMatrixService.newMatrix(localWord);
+    public StrictLowDensityParityCheckMatrix generateLDPCMatrix(LDPCEnums.TypeOfCoding typeOfCoding) {
+        ParityCheckMatrix parityCheckMatrix = parityCheckMatrixService.generateParityCheckMatrix(typeOfCoding);
+        return newStrictLDPCMatrix(parityCheckMatrix);
     }
 
     public StrictLowDensityParityCheckMatrix newStrictLDPCMatrix(ParityCheckMatrix parityCheckMatrix) {
@@ -145,14 +134,5 @@ public class LDPCMatrixService {
             }
         }
         return false;
-    }
-
-    private int checkIterator(int iterator) {
-        if (iterator < BORDER_FOR_EXCEPTION) {
-            iterator++;
-        } else {
-            throw new RuntimeException("Прошло " + BORDER_FOR_EXCEPTION + " циклов декодирования!");
-        }
-        return iterator;
     }
 }
