@@ -37,23 +37,22 @@ public class BooleanMatrixService {
     /*
     * блок основных функций!
     * */
-    public BooleanMatrix breakDownCodeWordWithGaussianNoise(BooleanMatrix codeWord) {
+    public BooleanMatrix breakDownByChannel(BooleanMatrix codeWord) {
         // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-23
         return newMatrix(codeWord);
     }
 
-    public BooleanMatrix recoveryCodeWord(BooleanMatrix codeWord, List<ColumnPair> swapHistory) {
-        List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(codeWord);
-        int size = swapHistory.size();
-        IntStream.iterate(size - 1, i -> i - 1)
-                .limit(size)
-                .forEach(i ->
+    public BooleanMatrix recoveryBySwapHistory(BooleanMatrix booleanMatrix, List<ColumnPair> swapHistory) {
+        List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
+        Collections.reverse(swapHistory);
+        swapHistory.forEach(
+                columnPair ->
                         Collections.swap(
                                 matrix,
-                                swapHistory.get(i).getColumnNumberRight(),
-                                swapHistory.get(i).getColumnNumberLeft()
+                                columnPair.getColumnNumberRight(),
+                                columnPair.getColumnNumberLeft()
                         )
-                );
+        );
         return getTransposedBooleanMatrix(newMatrix(rowService.mapColumnsToRows(matrix)));
     }
 
@@ -69,21 +68,23 @@ public class BooleanMatrixService {
         }
 
         List<Row> resultMatrix = booleanMatrixA.getMatrix().stream()
-                .map(row -> {
-                    List<Integer> truePositionsInRow = getPositionsTrueElements(row.getElements());
+                .map(
+                        row -> {
+                            List<Integer> truePositionsInRow = getPositionsTrueElements(row.getElements());
 
-                    List<Row> matrixB = booleanMatrixB.getMatrix();
+                            List<Row> matrixB = booleanMatrixB.getMatrix();
 
-                    List<Row> rowsForXOR = truePositionsInRow.stream()
-                            .map(matrixB::get)
-                            .collect(Collectors.toList());
+                            List<Row> rowsForXOR = truePositionsInRow.stream()
+                                    .map(matrixB::get)
+                                    .collect(Collectors.toList());
 
-                    List<Boolean> resultElements = generateElements(booleanMatrixB.getSizeX(), false);
-                    for (Row filteredRow : rowsForXOR) {
-                        resultElements = xor(resultElements, filteredRow.getElements());
-                    }
-                    return rowService.newRow(resultElements);
-                })
+                            List<Boolean> resultElements = generateElements(booleanMatrixB.getSizeX(), false);
+                            for (Row filteredRow : rowsForXOR) {
+                                resultElements = xor(resultElements, filteredRow.getElements());
+                            }
+                            return rowService.newRow(resultElements);
+                        }
+                )
                 .collect(Collectors.toList());
 
         return newMatrix(resultMatrix);
@@ -121,23 +122,21 @@ public class BooleanMatrixService {
                 .collect(Collectors.toList());
     }
 
-    public long getCountEmptyRows(BooleanMatrix booleanMatrix) {
-        return booleanMatrix.getMatrix().stream()
-                .filter(row -> {
-                    List<Boolean> falseElements = row.getElements().stream()
-                            .filter(element -> !element)
-                            .collect(Collectors.toList());
-
-                    return (falseElements.size() == row.getElements().size());
-                })
-                .count();
+    public List<Integer> getNumbersPositionsEmptyRows(BooleanMatrix booleanMatrix) {
+        return IntStream.range(0, booleanMatrix.getSizeY())
+                .filter(i -> rowService.isFullFalseElementsRow(booleanMatrix.getMatrix().get(i)))
+                .boxed()
+                .collect(Collectors.toList());
     }
 
     public BooleanMatrix createIdentityMatrix(int N) {
         List<Row> rows = IntStream.range(0, N)
                 .mapToObj(i -> rowService.newRow(generateElements(N, false)))
                 .collect(Collectors.toList());
-        IntStream.range(0, N).forEach(i -> rows.get(i).getElements().set(i, true));
+
+        IntStream.range(0, N)
+                .forEach(i -> rows.get(i).getElements().set(i, true));
+
         return newMatrix(rows);
     }
 
@@ -173,10 +172,11 @@ public class BooleanMatrixService {
     }
 
     public BooleanMatrix removeColumns(BooleanMatrix booleanMatrix, List<Integer> columns) {
-        columns.sort(Comparator.comparing(Integer::intValue));
         BooleanMatrix newBooleanMatrix = newMatrix(booleanMatrix);
-        for (int i = columns.size() - 1; i >= 0; i--) {
-            newBooleanMatrix = removeColumn(newBooleanMatrix, columns.get(i));
+
+        columns.sort(Comparator.comparing(Integer::intValue).reversed());
+        for (Integer column : columns) {
+            newBooleanMatrix = removeColumn(newBooleanMatrix, column);
         }
         return newMatrix(newBooleanMatrix);
     }

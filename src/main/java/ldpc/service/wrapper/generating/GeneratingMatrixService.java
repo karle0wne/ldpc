@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -117,7 +118,7 @@ public class GeneratingMatrixService {
         /*
         * восстанавливаем порядок столбцов в порождающей матрице
         * */
-        return newGeneratingMatrix(booleanMatrixService.recoveryCodeWord(generatingMatrix.getBooleanMatrix(), swapHistory));
+        return newGeneratingMatrix(booleanMatrixService.recoveryBySwapHistory(generatingMatrix.getBooleanMatrix(), swapHistory));
     }
 
     /*
@@ -141,30 +142,24 @@ public class GeneratingMatrixService {
 
     private void additionalRowsByPosition(BooleanMatrix booleanMatrix, Column columnMatrix, int firstTruePosition) {
         List<Integer> changingTruePositions = booleanMatrixService.getPositionsTrueElementsWithoutFirst(columnMatrix.getElements(), firstTruePosition);
+        Row currentRow = booleanMatrix.getMatrix().get(firstTruePosition);
 
         for (Integer changingTruePosition : changingTruePositions) {
-            Row currentRow = booleanMatrix.getMatrix().get(firstTruePosition);
             Row changingRow = booleanMatrix.getMatrix().get(changingTruePosition);
-            List<Boolean> resultElements = booleanMatrixService.xor(currentRow.getElements(), changingRow.getElements());
-            Row resultRow = rowService.newRow(resultElements);
+            Row resultRow = rowService.newRow(booleanMatrixService.xor(currentRow.getElements(), changingRow.getElements()));
             booleanMatrix.getMatrix().set(changingTruePosition, resultRow);
         }
     }
 
     private void removeEmptyRows(BooleanMatrix booleanMatrix, Column mask) {
-        long countRowsForDelete = booleanMatrixService.getCountEmptyRows(booleanMatrix);
-
-        List<Row> matrix = booleanMatrix.getMatrix();
-        for (int i = 0; i < countRowsForDelete; i++) {
-            Integer numberOfRowForDelete = IntStream.range(0, booleanMatrix.getSizeY())
-                    .filter(j -> rowService.isFullFalseElementsRow(matrix.get(j)))
-                    .findFirst()
-                    .orElse(DOES_NOT_EXIST);
-            if (numberOfRowForDelete != DOES_NOT_EXIST) {
-                matrix.remove((int) numberOfRowForDelete);
-                mask.getElements().remove((int) numberOfRowForDelete);
-            }
-        }
+        List<Integer> numberEmptyRows = booleanMatrixService.getNumbersPositionsEmptyRows(booleanMatrix);
+        numberEmptyRows.sort(Comparator.comparing(Integer::intValue).reversed());
+        numberEmptyRows.forEach(
+                numberEmptyRow -> {
+                    booleanMatrix.getMatrix().remove((int) numberEmptyRow);
+                    mask.getElements().remove((int) numberEmptyRow);
+                }
+        );
     }
 
     private void sortedRows(BooleanMatrix booleanMatrix) {
@@ -190,10 +185,13 @@ public class GeneratingMatrixService {
             Row row = matrix.get(rowNumber);
             Integer truePosition = booleanMatrixService.getPositionFirstTrueElement(row.getElements(), rowNumber, booleanMatrix.getSizeX());
             if (truePosition != DOES_NOT_EXIST) {
-                IntStream.range(0, booleanMatrix.getSizeY()).forEach(i -> {
-                    List<Boolean> elements = matrix.get(i).getElements();
-                    Collections.swap(elements, rowNumber, truePosition);
-                });
+                IntStream.range(0, booleanMatrix.getSizeY())
+                        .forEach(
+                                i -> {
+                                    List<Boolean> elements = matrix.get(i).getElements();
+                                    Collections.swap(elements, rowNumber, truePosition);
+                                }
+                        );
                 swapHistory.add(new ColumnPair(rowNumber, truePosition));
             }
         }
@@ -219,9 +217,9 @@ public class GeneratingMatrixService {
 
         List<Row> matrix = booleanGeneratingMatrix.getMatrix();
         List<Row> identityMatrix = booleanIdentityMatrix.getMatrix();
-        for (int i = 0; i < booleanGeneratingMatrix.getSizeY(); i++) {
-            matrix.get(i).getElements().addAll(identityMatrix.get(i).getElements());
-        }
+        IntStream.range(0, booleanGeneratingMatrix.getSizeY())
+                .forEach(i -> matrix.get(i).getElements().addAll(identityMatrix.get(i).getElements()));
+
         return booleanMatrixService.newMatrix(matrix);
     }
 
