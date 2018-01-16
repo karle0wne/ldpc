@@ -3,6 +3,7 @@ package ldpc.service.basis;
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.basis.Column;
 import ldpc.matrix.basis.Row;
+import ldpc.util.MathUtils;
 import ldpc.util.template.ColumnPair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -100,12 +101,8 @@ public class BooleanMatrixService {
                 .collect(Collectors.toList());
     }
 
-    private ArrayList<Boolean> generateElements(int size, boolean element) {
+    public List<Boolean> generateElements(int size, boolean element) {
         return new ArrayList<>(Collections.nCopies(size, element));
-    }
-
-    private double getPercentage(double part, double all) {
-        return ((part / all) * 100.0d);
     }
 
     /*
@@ -164,7 +161,7 @@ public class BooleanMatrixService {
                 .mapToLong(row -> getCountTrueElements(row.getElements()))
                 .sum();
         int countElements = matrix.size() * matrix.get(0).getElements().size();
-        return getPercentage(count, countElements);
+        return MathUtils.getPercentage(count, countElements);
     }
 
     public BooleanMatrix removeColumns(BooleanMatrix booleanMatrix, List<Integer> columns) {

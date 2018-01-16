@@ -8,7 +8,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static ldpc.util.template.LDPCEnums.TypeOfChannel.AWGN_DUMMY;
-import static ldpc.util.template.LDPCEnums.TypeOfCoding.LDPC_DUMMY_ONE;
+import static ldpc.util.template.LDPCEnums.TypeOfCoding.LDPC_ONE;
 import static ldpc.util.template.LDPCEnums.TypeOfCoding.PCM_DUMMY;
 import static ldpc.util.template.LDPCEnums.TypeOfDecoding.MIN_SUM_DUMMY;
 
@@ -21,7 +21,7 @@ public class MainApplicationTest {
 
     @Test
     public void ldpc() {
-        standService.demoStandLDPC(LDPC_DUMMY_ONE, AWGN_DUMMY, MIN_SUM_DUMMY);
+        standService.demoStandLDPC(LDPC_ONE, AWGN_DUMMY, MIN_SUM_DUMMY);
     }
 
     @Test

@@ -72,28 +72,28 @@ public class StandService {
 
         System.out.println(generatingMatrix.toString() + DELIMITER);
 
-        System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
-        System.out.println(informationWord.getMatrix().get(0).toString() + DELIMITER);
+//        System.out.println("ИНФОРМАЦИОННОЕ СЛОВО:");
+//        System.out.println(informationWord.getMatrix().get(0).toString() + DELIMITER);
 
-        System.out.println("КОДОВОЕ СЛОВО: ");
-        System.out.println(recoveryCodeWord.getMatrix().get(0).toString() + DELIMITER);
+//        System.out.println("КОДОВОЕ СЛОВО: ");
+//        System.out.println(recoveryCodeWord.getMatrix().get(0).toString() + DELIMITER);
 
-        System.out.println("---------------");
-        System.out.println("ТИПА ПЕРЕДАЧА ПО КАНАЛУ...");
-        System.out.println("ВНЕСЕНИЕ ОШИБОК В КОДОВОЕ СЛОВО");
-        System.out.println("---------------" + DELIMITER);
+//        System.out.println("---------------");
+//        System.out.println("ТИПА ПЕРЕДАЧА ПО КАНАЛУ...");
+//        System.out.println("ВНЕСЕНИЕ ОШИБОК В КОДОВОЕ СЛОВО");
+//        System.out.println("---------------" + DELIMITER);
 
         System.out.println(matrix.toString() + DELIMITER);
 
-        System.out.println("КОДОВОЕ СООБЩЕНИЕ, КОТОРОЕ ПРИШЛО ИЗ КАНАЛА: ");
-        System.out.println(brokenCodeWord.getMatrix().get(0).toString() + DELIMITER);
+//        System.out.println("КОДОВОЕ СООБЩЕНИЕ, КОТОРОЕ ПРИШЛО ИЗ КАНАЛА: ");
+//        System.out.println(brokenCodeWord.getMatrix().get(0).toString() + DELIMITER);
 
-        System.out.println("---------------");
-        System.out.println("ДЕКОДИРОВАНИЕ ПОЛУЧЕННОГО СООБЩЕНИЯ...");
-        System.out.println("---------------" + DELIMITER);
+//        System.out.println("---------------");
+//        System.out.println("ДЕКОДИРОВАНИЕ ПОЛУЧЕННОГО СООБЩЕНИЯ...");
+//        System.out.println("---------------" + DELIMITER);
 
-        System.out.println("ДЕКОДИРОВАННОЕ КОДОВОЕ СЛОВО:");
-        System.out.println(booleanMatrixService.getTransposedBooleanMatrix(decodedCodeWord).getMatrix().get(0).toString() + DELIMITER);
+//        System.out.println("ДЕКОДИРОВАННОЕ КОДОВОЕ СЛОВО:");
+//        System.out.println(booleanMatrixService.getTransposedBooleanMatrix(decodedCodeWord).getMatrix().get(0).toString() + DELIMITER);
 
         System.out.println("СИНДРОМ ПРОВЕРКИ");
         System.out.println(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).toString() + DELIMITER);

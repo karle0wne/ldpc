@@ -10,7 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Сервис для проверочной матрицы
@@ -34,7 +38,6 @@ public class ParityCheckMatrixService {
     public ParityCheckMatrix generateParityCheckMatrix(LDPCEnums.TypeOfCoding typeOfCoding) {
         switch (typeOfCoding) {
             case LDPC_DUMMY_ONE:
-                // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-13, потом убрать другие кейзы
                 return prepared_PCM_LDPC();
             case LDPC_DUMMY_TWO:
                 return prepared_PCM_LDPC1();
@@ -42,9 +45,47 @@ public class ParityCheckMatrixService {
                 return prepared_PCM_LDPC2();
             case PCM_DUMMY:
                 return preparedPCM();
+            case LDPC_ONE:
+                return generateWithoutGFourAndGSix(3);
             default:
                 return prepared_PCM_LDPC();
         }
+    }
+
+    private ParityCheckMatrix generateWithoutGFourAndGSix(int k) {
+        List<Row> rows = Stream.concat(
+                IntStream.range(0, k)
+                        .mapToObj(
+                                i -> IntStream.range(0, k)
+                                        .mapToObj(
+                                                j -> {
+                                                    if (i == j) {
+                                                        return booleanMatrixService.generateElements(k, true);
+                                                    } else {
+                                                        return booleanMatrixService.generateElements(k, false);
+                                                    }
+                                                }
+                                        ).flatMap(Collection::stream)
+                                        .collect(Collectors.toList())
+                        )
+                        .map(rowService::newRow),
+                IntStream.range(0, k)
+                        .mapToObj(
+                                i -> IntStream.range(0, k)
+                                        .mapToObj(
+                                                j -> {
+                                                    List<Boolean> block = booleanMatrixService.generateElements(k, false);
+                                                    block.set(i, true);
+                                                    return block;
+                                                }
+                                        ).flatMap(Collection::stream)
+                                        .collect(Collectors.toList())
+                        )
+                        .map(rowService::newRow)
+        )
+                .collect(Collectors.toList());
+
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(rows));
     }
 
     private ParityCheckMatrix preparedPCM() {
@@ -106,4 +147,5 @@ public class ParityCheckMatrixService {
     public ParityCheckMatrix newParityCheckMatrix(BooleanMatrix booleanMatrix) {
         return new ParityCheckMatrix(booleanMatrixService.newMatrix(booleanMatrix));
     }
+
 }

@@ -44,6 +44,9 @@ public class LDPCMatrixService {
         long j = getJ(parityCheckMatrix);
         long g = getG(parityCheckMatrix);
         ParityCheckMatrix matrix = parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix);
+        if (!validate(matrix, k, j)) {
+            throw new RuntimeException("Проверьте значения K, J и m*n матрицы!");
+        }
         return new StrictLowDensityParityCheckMatrix(matrix, k, j, g);
 
     }
@@ -134,5 +137,9 @@ public class LDPCMatrixService {
             }
         }
         return false;
+    }
+
+    private boolean validate(ParityCheckMatrix parityCheckMatrix, long k, long j) {
+        return (j * parityCheckMatrix.getBooleanMatrix().getSizeX()) == (k * parityCheckMatrix.getBooleanMatrix().getSizeY());
     }
 }

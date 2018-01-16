@@ -11,6 +11,7 @@ public class LDPCEnums {
         LDPC_DUMMY_ONE,
         LDPC_DUMMY_TWO,
         LDPC_DUMMY_THREE,
+        LDPC_ONE,
         PCM_DUMMY
     }
 
