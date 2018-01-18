@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -50,73 +47,48 @@ public class ParityCheckMatrixService {
             case LDPC_ONE:
                 return generateWithoutGFourAndGSix(3);
             case LDPC_TWO:
-                return generateWithoutGFourAndGSixVersionTwo(3);
+                return generateWithoutGFourAndGSixVersionTwo(5);
             default:
                 return prepared_PCM_LDPC();
         }
     }
 
     private ParityCheckMatrix generateWithoutGFourAndGSix(int k) {
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(getLDPCBlock(k)));
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(getLDPCBlock(k, true)));
     }
 
     private ParityCheckMatrix generateWithoutGFourAndGSixVersionTwo(int k) {
         return newParityCheckMatrix(booleanMatrixService.newMatrix(getLDPCBlockVersionTwo(k)));
     }
 
-    private List<Row> getLDPCBlock(int k) {
-        return Stream.concat(getBlock(k, BlockType.FIRST), getLastLine(k, 1))
-                .collect(Collectors.toList());
+    private List<Row> getLDPCBlock(int k, boolean isNotZeroBlock) {
+        Stream<Row> firstBlock = isNotZeroBlock ? getBlock(k, true) : getBlock(k, false);
+        Stream<Row> secondBlock = isNotZeroBlock ? getLastLine(k, 1) : getBlock(k, false);
+        return Stream.concat(firstBlock, secondBlock).collect(Collectors.toList());
     }
 
-    private List<Row> getZeroBlock(int k) {
-        return Stream.concat(getBlock(k, BlockType.ZERO), getBlock(k, BlockType.ZERO))
-                .collect(Collectors.toList());
-    }
-
-    private Stream<Row> getBlock(int k, BlockType blockType) {
+    private Stream<Row> getBlock(int k, boolean isNotZeroBlock) {
         return IntStream.range(0, k)
-                .mapToObj(i -> getLine(k, blockType, i))
-                .map(rowService::newRow);
+                .mapToObj(i -> getLine(k, i, isNotZeroBlock))
+                .flatMap(Collection::stream);
     }
 
-    private List<Boolean> getLine(int k, BlockType blockType, int i) {
-        return IntStream.range(0, k)
-                .mapToObj(j -> getPartOfTheLine(k, blockType, i, j))
-                .map(Row::getElements)
-                .flatMap(Collection::stream)
+    private List<Row> getLine(int k, int i, boolean isNotZeroBlock) {
+        List<BooleanMatrix> line = IntStream.range(0, k)
+                .mapToObj(j -> getPartOfTheLine(k, i, j, isNotZeroBlock))
+                .map(booleanMatrixService::newMatrix)
                 .collect(Collectors.toList());
+        return mergeLine(line);
     }
 
-    private Row getPartOfTheLine(int k, BlockType blockType, int i, int j) {
-        switch (blockType) {
-            case FIRST:
-                return getPartOfTheFirstLine(k, i, j);
-            case LAST:
-                return getPartOfTheLastLine(k, i);
-            case ZERO:
-                return getPartOfTheZeroLine(k);
-            default:
-                return getPartOfTheZeroLine(k);
-        }
-    }
-
-    private Row getPartOfTheFirstLine(int k, int i, int j) {
-        if (i == j) {
-            return rowService.newRow(booleanMatrixService.generateElements(k, true));
+    private List<Row> getPartOfTheLine(int k, int i, int j, boolean isNotZeroBlock) {
+        if (isNotZeroBlock && i == j) {
+            Row row = rowService.newRow(booleanMatrixService.generateElements(k, true));
+            return Collections.singletonList(row);
         } else {
-            return rowService.newRow(booleanMatrixService.generateElements(k, false));
+            Row row = rowService.newRow(booleanMatrixService.generateElements(k, false));
+            return Collections.singletonList(row);
         }
-    }
-
-    private Row getPartOfTheLastLine(int k, int i) {
-        List<Boolean> elements = booleanMatrixService.generateElements(k, false);
-        elements.set(i, true);
-        return rowService.newRow(elements);
-    }
-
-    private Row getPartOfTheZeroLine(int k) {
-        return rowService.newRow(booleanMatrixService.generateElements(k, false));
     }
 
     private List<Row> getLDPCBlockVersionTwo(int k) {
@@ -140,9 +112,9 @@ public class ParityCheckMatrixService {
 
     private List<Row> getPartOfLine(int k, int i, int j) {
         if (i == j) {
-            return getLDPCBlock(k);
+            return getLDPCBlock(k, true);
         } else {
-            return getZeroBlock(k);
+            return getLDPCBlock(k, false);
         }
     }
 
@@ -252,11 +224,5 @@ public class ParityCheckMatrixService {
 
     public ParityCheckMatrix newParityCheckMatrix(BooleanMatrix booleanMatrix) {
         return new ParityCheckMatrix(booleanMatrixService.newMatrix(booleanMatrix));
-    }
-
-    private enum BlockType {
-        FIRST,
-        LAST,
-        ZERO
     }
 }

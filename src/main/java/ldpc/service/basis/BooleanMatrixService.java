@@ -123,14 +123,18 @@ public class BooleanMatrixService {
     }
 
     public BooleanMatrix createIdentityMatrix(int N) {
-        List<Row> rows = IntStream.range(0, N)
-                .mapToObj(i -> rowService.newRow(generateElements(N, false)))
-                .collect(Collectors.toList());
+        List<Row> rows = createZeroMatrix(N);
 
         IntStream.range(0, N)
                 .forEach(i -> rows.get(i).getElements().set(i, true));
 
         return newMatrix(rows);
+    }
+
+    private List<Row> createZeroMatrix(int N) {
+        return IntStream.range(0, N)
+                .mapToObj(i -> rowService.newRow(generateElements(N, false)))
+                .collect(Collectors.toList());
     }
 
     public List<Integer> getPositionsTrueElementsWithoutFirst(List<Boolean> elements, int firstTruePosition) {
