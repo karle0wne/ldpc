@@ -61,6 +61,9 @@ public class ParityCheckMatrixService {
     }
 
     private ParityCheckMatrix generateWithGEight(int k, int g) {
+        if (g > k) {
+            throw new RuntimeException("G должен быть не больше K!");
+        }
         return newParityCheckMatrix(booleanMatrixService.newMatrix(getLDPCBlock(k, g, true)));
     }
 
