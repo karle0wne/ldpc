@@ -65,7 +65,7 @@ public class ParityCheckMatrixService {
     }
 
     private List<Row> getLDPCBlock(int k) {
-        return Stream.concat(getBlock(k, BlockType.FIRST), getBlock(k, BlockType.LAST))
+        return Stream.concat(getBlock(k, BlockType.FIRST), getLastLine(k, 1))
                 .collect(Collectors.toList());
     }
 
@@ -120,7 +120,7 @@ public class ParityCheckMatrixService {
     }
 
     private List<Row> getLDPCBlockVersionTwo(int k) {
-        return Stream.concat(getBlock(k), getLastLine(k))
+        return Stream.concat(getBlock(k), getLastLine(k, 2))
                 .collect(Collectors.toList());
     }
 
@@ -146,9 +146,9 @@ public class ParityCheckMatrixService {
         }
     }
 
-    private Stream<Row> getLastLine(int k) {
+    private Stream<Row> getLastLine(int k, int pow) {
         List<BooleanMatrix> line = IntStream.range(0, k)
-                .mapToObj(i -> booleanMatrixService.createIdentityMatrix(BigInteger.valueOf(k).pow(2).intValue()))
+                .mapToObj(i -> booleanMatrixService.createIdentityMatrix(BigInteger.valueOf(k).pow(pow).intValue()))
                 .collect(Collectors.toList());
         return mergeLine(line).stream();
     }
