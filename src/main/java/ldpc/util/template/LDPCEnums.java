@@ -8,12 +8,14 @@ public class LDPCEnums {
     }
 
     public enum TypeOfCoding {
-        LDPC_DUMMY_ONE,
-        LDPC_DUMMY_TWO,
-        LDPC_DUMMY_THREE,
-        LDPC_ONE,
-        LDPC_TWO,
-        PCM_DUMMY
+        K5J4,
+        K6J4,
+        K6J5,
+        K7J4,
+        K8J4,
+        K8J3,
+        K9J3,
+        K9J4
     }
 
     public enum TypeOfChannel {

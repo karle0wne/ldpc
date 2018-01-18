@@ -131,7 +131,7 @@ public class BooleanMatrixService {
         return newMatrix(rows);
     }
 
-    private List<Row> createZeroMatrix(int N) {
+    public List<Row> createZeroMatrix(int N) {
         return IntStream.range(0, N)
                 .mapToObj(i -> rowService.newRow(generateElements(N, false)))
                 .collect(Collectors.toList());
