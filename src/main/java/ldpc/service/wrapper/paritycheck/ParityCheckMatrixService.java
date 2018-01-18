@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -39,118 +39,86 @@ public class ParityCheckMatrixService {
     * */
     public ParityCheckMatrix generateParityCheckMatrix(LDPCEnums.TypeOfCoding typeOfCoding) {
         switch (typeOfCoding) {
-            case LDPC_DUMMY_ONE:
-                return prepared_PCM_LDPC();
-            case LDPC_DUMMY_TWO:
-                return prepared_PCM_LDPC1();
-            case LDPC_DUMMY_THREE:
-                return prepared_PCM_LDPC2();
-            case PCM_DUMMY:
-                return preparedPCM();
-            case LDPC_ONE:
-                return generateWithoutGFourAndGSix(3);
-            case LDPC_TWO:
-                return generateWithoutGFourAndGSixVersionTwo(3);
+            case K5J4:
+                return generateWithGEight(5, 4);
+            case K6J4:
+                return generateWithGEight(6, 4);
+            case K6J5:
+                return generateWithGEight(6, 5);
+            case K7J4:
+                return generateWithGEight(7, 4);
+            case K8J4:
+                return generateWithGEight(8, 4);
+            case K8J3:
+                return generateWithGEight(8, 3);
+            case K9J3:
+                return generateWithGEight(9, 3);
+            case K9J4:
+                return generateWithGEight(9, 4);
             default:
-                return prepared_PCM_LDPC();
+                return generateWithGEight(3, 2);
         }
     }
 
-    private ParityCheckMatrix generateWithoutGFourAndGSix(int k) {
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(getLDPCBlock(k)));
-    }
-
-    private ParityCheckMatrix generateWithoutGFourAndGSixVersionTwo(int k) {
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(getLDPCBlockVersionTwo(k)));
-    }
-
-    private List<Row> getLDPCBlock(int k) {
-        return Stream.concat(getBlock(k, BlockType.FIRST), getBlock(k, BlockType.LAST))
-                .collect(Collectors.toList());
-    }
-
-    private List<Row> getZeroBlock(int k) {
-        return Stream.concat(getBlock(k, BlockType.ZERO), getBlock(k, BlockType.ZERO))
-                .collect(Collectors.toList());
-    }
-
-    private Stream<Row> getBlock(int k, BlockType blockType) {
-        return IntStream.range(0, k)
-                .mapToObj(i -> getLine(k, blockType, i))
-                .map(rowService::newRow);
-    }
-
-    private List<Boolean> getLine(int k, BlockType blockType, int i) {
-        return IntStream.range(0, k)
-                .mapToObj(j -> getPartOfTheLine(k, blockType, i, j))
-                .map(Row::getElements)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-    }
-
-    private Row getPartOfTheLine(int k, BlockType blockType, int i, int j) {
-        switch (blockType) {
-            case FIRST:
-                return getPartOfTheFirstLine(k, i, j);
-            case LAST:
-                return getPartOfTheLastLine(k, i);
-            case ZERO:
-                return getPartOfTheZeroLine(k);
-            default:
-                return getPartOfTheZeroLine(k);
+    private ParityCheckMatrix generateWithGEight(int k, int g) {
+        if (g > k) {
+            throw new RuntimeException("G должен быть не больше K!");
         }
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(getLDPCBlock(k, g, true)));
     }
 
-    private Row getPartOfTheFirstLine(int k, int i, int j) {
-        if (i == j) {
-            return rowService.newRow(booleanMatrixService.generateElements(k, true));
-        } else {
-            return rowService.newRow(booleanMatrixService.generateElements(k, false));
-        }
+    private List<Row> getLDPCBlock(int k, int g, boolean isNotZeroBlock) {
+        Stream<Row> firstBlock = isNotZeroBlock ? getBlock(k, g, true) : getBlock(k, g, false);
+        Stream<Row> secondBlock = isNotZeroBlock ? getLastLine(k, g - 1, true) : getLastLine(k, g - 1, false);
+        return Stream.concat(firstBlock, secondBlock).collect(Collectors.toList());
     }
 
-    private Row getPartOfTheLastLine(int k, int i) {
-        List<Boolean> elements = booleanMatrixService.generateElements(k, false);
-        elements.set(i, true);
-        return rowService.newRow(elements);
-    }
-
-    private Row getPartOfTheZeroLine(int k) {
-        return rowService.newRow(booleanMatrixService.generateElements(k, false));
-    }
-
-    private List<Row> getLDPCBlockVersionTwo(int k) {
-        return Stream.concat(getBlock(k), getLastLine(k))
-                .collect(Collectors.toList());
-    }
-
-    private Stream<Row> getBlock(int k) {
+    private Stream<Row> getBlock(int k, int g, boolean isNotZeroBlock) {
         return IntStream.range(0, k)
-                .mapToObj(i -> getLine(k, i))
+                .mapToObj(i -> getLine(k, g, i, isNotZeroBlock))
                 .flatMap(Collection::stream);
     }
 
-    private List<Row> getLine(int k, int i) {
+    private List<Row> getLine(int k, int g, int i, boolean isNotZeroBlock) {
         List<BooleanMatrix> line = IntStream.range(0, k)
-                .mapToObj(j -> getPartOfLine(k, i, j))
+                .mapToObj(j -> getPartOfTheLine(k, g, j, i, isNotZeroBlock))
                 .map(booleanMatrixService::newMatrix)
                 .collect(Collectors.toList());
         return mergeLine(line);
     }
 
-    private List<Row> getPartOfLine(int k, int i, int j) {
-        if (i == j) {
-            return getLDPCBlock(k);
+    private List<Row> getPartOfTheLine(int k, int g, int j, int i, boolean isNotZeroBlock) {
+        if (g == 2) {
+            if (isNotZeroBlock && i == j) {
+                Row row = rowService.newRow(booleanMatrixService.generateElements(k, true));
+                return Collections.singletonList(row);
+            } else {
+                Row row = rowService.newRow(booleanMatrixService.generateElements(k, false));
+                return Collections.singletonList(row);
+            }
         } else {
-            return getZeroBlock(k);
+            if (isNotZeroBlock && i == j) {
+                return getLDPCBlock(k, g - 1, true);
+            } else {
+                return getLDPCBlock(k, g - 1, false);
+            }
         }
     }
 
-    private Stream<Row> getLastLine(int k) {
+    private Stream<Row> getLastLine(int k, int pow, boolean isNotZeroBlock) {
         List<BooleanMatrix> line = IntStream.range(0, k)
-                .mapToObj(i -> booleanMatrixService.createIdentityMatrix(BigInteger.valueOf(k).pow(2).intValue()))
+                .mapToObj(i -> getIdentityMatrix(k, pow, isNotZeroBlock))
                 .collect(Collectors.toList());
         return mergeLine(line).stream();
+    }
+
+    private BooleanMatrix getIdentityMatrix(int k, int pow, boolean isNotZeroBlock) {
+        if (isNotZeroBlock) {
+            return booleanMatrixService.createIdentityMatrix(BigInteger.valueOf(k).pow(pow).intValue());
+        } else {
+            List<Row> zeroMatrix = booleanMatrixService.createZeroMatrix(BigInteger.valueOf(k).pow(pow).intValue());
+            return booleanMatrixService.newMatrix(zeroMatrix);
+        }
     }
 
     private List<Row> mergeLine(List<BooleanMatrix> booleanMatrices) {
@@ -194,69 +162,11 @@ public class ParityCheckMatrixService {
         return minY;
     }
 
-    private ParityCheckMatrix preparedPCM() {
-        List<Row> matrix = new ArrayList<>();
-        matrix.add(rowService.createRow(0, 1, 1, 1, 1, 0, 0));
-        matrix.add(rowService.createRow(1, 0, 1, 1, 0, 1, 0));
-        matrix.add(rowService.createRow(1, 1, 0, 1, 0, 0, 1));
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
-    }
-
-    private ParityCheckMatrix prepared_PCM_LDPC() {
-        List<Row> matrix = new ArrayList<>();
-        matrix.add(rowService.createRow(1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1));
-        matrix.add(rowService.createRow(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0));
-        matrix.add(rowService.createRow(0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0));
-        matrix.add(rowService.createRow(0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1));
-        matrix.add(rowService.createRow(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0));
-        matrix.add(rowService.createRow(0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0));
-        matrix.add(rowService.createRow(0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
-    }
-
-    private ParityCheckMatrix prepared_PCM_LDPC1() {
-        List<Row> matrix = new ArrayList<>();
-        matrix.add(rowService.createRow(1, 1, 0, 0, 1, 0));
-        matrix.add(rowService.createRow(0, 1, 1, 0, 0, 1));
-        matrix.add(rowService.createRow(0, 0, 1, 1, 1, 0));
-        matrix.add(rowService.createRow(1, 0, 0, 1, 0, 1));
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
-    }
-
-    private ParityCheckMatrix prepared_PCM_LDPC2() {
-        List<Row> matrix = new ArrayList<>();
-        matrix.add(rowService.createRow(0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1));
-        matrix.add(rowService.createRow(1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1));
-        matrix.add(rowService.createRow(0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0));
-        matrix.add(rowService.createRow(0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0));
-        matrix.add(rowService.createRow(0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0));
-        matrix.add(rowService.createRow(0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1));
-        matrix.add(rowService.createRow(1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0));
-        matrix.add(rowService.createRow(0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0));
-        matrix.add(rowService.createRow(1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0));
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
-    }
-
     public ParityCheckMatrix newParityCheckMatrix(ParityCheckMatrix parityCheckMatrix) {
         return new ParityCheckMatrix(booleanMatrixService.newMatrix(parityCheckMatrix.getBooleanMatrix()));
     }
 
     public ParityCheckMatrix newParityCheckMatrix(BooleanMatrix booleanMatrix) {
         return new ParityCheckMatrix(booleanMatrixService.newMatrix(booleanMatrix));
-    }
-
-    private enum BlockType {
-        FIRST,
-        LAST,
-        ZERO
     }
 }

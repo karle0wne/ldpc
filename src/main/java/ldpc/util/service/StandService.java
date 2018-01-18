@@ -95,8 +95,8 @@ public class StandService {
 //        System.out.println("ДЕКОДИРОВАННОЕ КОДОВОЕ СЛОВО:");
 //        System.out.println(booleanMatrixService.getTransposedBooleanMatrix(decodedCodeWord).getMatrix().get(0).toString() + DELIMITER);
 
-        System.out.println("СИНДРОМ ПРОВЕРКИ");
-        System.out.println(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).toString() + DELIMITER);
+//        System.out.println("СИНДРОМ ПРОВЕРКИ");
+//        System.out.println(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).toString() + DELIMITER);
     }
 
     public void demoStandWithoutLDPC(LDPCEnums.TypeOfCoding typeOfCoding) {

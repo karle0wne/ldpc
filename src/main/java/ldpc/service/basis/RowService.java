@@ -63,7 +63,7 @@ public class RowService {
         return new Row(newElements(elements));
     }
 
-    private ArrayList<Boolean> newElements(List<Boolean> elements) {
+    private List<Boolean> newElements(List<Boolean> elements) {
         return new ArrayList<>(elements);
     }
 }
