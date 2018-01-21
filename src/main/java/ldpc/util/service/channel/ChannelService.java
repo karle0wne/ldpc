@@ -20,14 +20,13 @@ public class ChannelService {
     }
 
     public BooleanMatrix send(BooleanMatrix codeWord, LDPCEnums.TypeOfChannel typeOfChannel) {
+        if (typeOfChannel == null) {
+            return booleanMatrixService.newMatrix(codeWord);
+        }
         switch (typeOfChannel) {
-            case BCS:
-                return binarySymmetricChannelService.send(codeWord, 0.03D);
-            case AWGN_DUMMY:
+            case AWGN:
                 // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-23
-                return booleanMatrixService.newMatrix(codeWord);
-            case DUMMY:
-                return booleanMatrixService.newMatrix(codeWord);
+                return binarySymmetricChannelService.send(codeWord, 0.03D);
             default:
                 return booleanMatrixService.newMatrix(codeWord);
         }

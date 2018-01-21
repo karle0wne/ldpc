@@ -38,28 +38,20 @@ public class ParityCheckMatrixService {
     * блок обслуживающий создание матриц функций
     * */
     public ParityCheckMatrix generateParityCheckMatrix(LDPCEnums.TypeOfCoding typeOfCoding) {
+        if (typeOfCoding == null) {
+            return newParityCheckMatrix(booleanMatrixService.newMatrix(Collections.emptyList()));
+        }
         switch (typeOfCoding) {
-            case K5J4:
-                return generateWithGEight(5, 4);
-            case K6J4:
-                return generateWithGEight(6, 4);
-            case K6J5:
-                return generateWithGEight(6, 5);
-            case K7J4:
-                return generateWithGEight(7, 4);
-            case K8J4:
-                return generateWithGEight(8, 4);
-            case K8J3:
-                return generateWithGEight(8, 3);
-            case K9J3:
-                return generateWithGEight(9, 3);
-            case K9J4:
-                return generateWithGEight(9, 4);
-            default:
+            case GIRTH8:
                 return generateWithGEight(3, 2);
+            default:
+                return newParityCheckMatrix(booleanMatrixService.newMatrix(Collections.emptyList()));
         }
     }
 
+    /*
+    * блок внутренних служебных функций
+    * */
     private ParityCheckMatrix generateWithGEight(int k, int g) {
         if (g > k) {
             throw new RuntimeException("G должен быть не больше K!");
@@ -137,20 +129,20 @@ public class ParityCheckMatrixService {
         Integer maxX = booleanMatrices.stream()
                 .mapToInt(BooleanMatrix::getSizeX)
                 .max()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
         Integer minX = booleanMatrices.stream()
                 .mapToInt(BooleanMatrix::getSizeX)
                 .min()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         Integer maxY = booleanMatrices.stream()
                 .mapToInt(BooleanMatrix::getSizeY)
                 .max()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
         Integer minY = booleanMatrices.stream()
                 .mapToInt(BooleanMatrix::getSizeY)
                 .min()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         if (!Objects.equals(minX, maxX)) {
             throw new RuntimeException("Ошибка генерации!");
@@ -162,6 +154,9 @@ public class ParityCheckMatrixService {
         return minY;
     }
 
+    /*
+    * блок обслуживающий вывод и создание матриц функций
+    * */
     public ParityCheckMatrix newParityCheckMatrix(ParityCheckMatrix parityCheckMatrix) {
         return new ParityCheckMatrix(booleanMatrixService.newMatrix(parityCheckMatrix.getBooleanMatrix()));
     }

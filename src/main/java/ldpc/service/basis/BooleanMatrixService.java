@@ -38,7 +38,6 @@ public class BooleanMatrixService {
     /*
     * блок основных функций!
     * */
-
     public BooleanMatrix recoveryBySwapHistory(BooleanMatrix booleanMatrix, List<ColumnPair> swapHistory) {
         List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
         Collections.reverse(swapHistory);
@@ -240,12 +239,12 @@ public class BooleanMatrixService {
         Integer maxRowSize = rows.stream()
                 .mapToInt(row -> row.getElements().size())
                 .max()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         Integer minRowSize = rows.stream()
                 .mapToInt(row -> row.getElements().size())
                 .min()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         if (!Objects.equals(minRowSize, maxRowSize)) {
             throw new RuntimeException("Укажите матрицу с одинаковым количеством элементов в строках!");
@@ -262,12 +261,12 @@ public class BooleanMatrixService {
         Integer maxRowSize = rows.stream()
                 .mapToInt(row -> row.getElements().size())
                 .max()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         Integer minRowSize = rows.stream()
                 .mapToInt(row -> row.getElements().size())
                 .min()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         if (!Objects.equals(minRowSize, maxRowSize)) {
             throw new RuntimeException("Укажите матрицу с одинаковым количеством элементов в строках!");
