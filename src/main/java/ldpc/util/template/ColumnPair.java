@@ -14,16 +14,8 @@ public class ColumnPair {
         return columnNumberLeft;
     }
 
-    public void setColumnNumberLeft(Integer columnNumberLeft) {
-        this.columnNumberLeft = columnNumberLeft;
-    }
-
     public Integer getColumnNumberRight() {
         return columnNumberRight;
-    }
-
-    public void setColumnNumberRight(Integer columnNumberRight) {
-        this.columnNumberRight = columnNumberRight;
     }
 
     @Override

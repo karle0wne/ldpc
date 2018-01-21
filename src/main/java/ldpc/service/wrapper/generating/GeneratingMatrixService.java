@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static ldpc.util.service.decode.MinSumDecodeService.BORDER_ITERATION;
+
 /**
  * Сервис для порождающей матрицы
  */
@@ -26,7 +28,6 @@ import java.util.stream.IntStream;
 public class GeneratingMatrixService {
 
     public static final int DOES_NOT_EXIST = -1;
-    public static final int BORDER_FOR_EXCEPTION = 100;
 
     private final RowService rowService;
 
@@ -57,10 +58,7 @@ public class GeneratingMatrixService {
         /*
         * Пока маска проверки не станет полность состоять из false элементов (то есть вся матрица будет преобразована)
         * */
-        while (booleanMatrixService.getCountTrueElements(mask.getElements()) > 0) {
-
-            iterator = checkIterator(iterator);
-
+        for (int j = 0; !isCorrect(mask) && j < BORDER_ITERATION; j++) {
             /*
             * Обновляем маску
             * */
@@ -98,6 +96,8 @@ public class GeneratingMatrixService {
             sortedColumns(booleanMatrix, swapHistory);
         }
 
+        checkIterator(iterator);
+
         /*
         * Извлекаем столбцы с зависимыми элементами матрицы (то есть матрица без единичной матричной части)
         * */
@@ -116,16 +116,17 @@ public class GeneratingMatrixService {
         return newGeneratingMatrix(booleanMatrixService.recoveryBySwapHistory(generatingMatrix.getBooleanMatrix(), swapHistory));
     }
 
+    private boolean isCorrect(Column mask) {
+        return booleanMatrixService.getCountTrueElements(mask.getElements()) == 0;
+    }
+
     /*
     * блок внутренних служебных функций
     * */
-    private int checkIterator(int iterator) {
-        if (iterator < BORDER_FOR_EXCEPTION) {
-            iterator++;
-        } else {
+    private void checkIterator(int iterator) {
+        if (iterator == BORDER_ITERATION) {
             throw new RuntimeException("Проверьте валидность проверочной матрицы!");
         }
-        return iterator;
     }
 
     private int getFirstTruePosition(Column mask, Column columnMatrix) {
@@ -225,23 +226,6 @@ public class GeneratingMatrixService {
     /*
     * блок обслуживающий создание матриц функций
     * */
-    public GeneratingMatrix preparedPGM() {
-        List<Row> matrix = new ArrayList<>();
-        matrix.add(rowService.createRow(1, 1, 1, 1, 0, 0));
-        matrix.add(rowService.createRow(0, 1, 1, 0, 1, 0));
-        matrix.add(rowService.createRow(1, 1, 0, 0, 0, 1));
-        return newGeneratingMatrix(booleanMatrixService.newMatrix(matrix));
-    }
-
-    public GeneratingMatrix preparedPGM2() {
-        List<Row> matrix = new ArrayList<>();
-        matrix.add(rowService.createRow(1, 0, 0, 0, 0, 1, 1));
-        matrix.add(rowService.createRow(0, 1, 0, 0, 1, 0, 1));
-        matrix.add(rowService.createRow(0, 0, 1, 0, 1, 1, 0));
-        matrix.add(rowService.createRow(0, 0, 0, 1, 1, 1, 1));
-        return newGeneratingMatrix(booleanMatrixService.newMatrix(matrix));
-    }
-
     public GeneratingMatrix newGeneratingMatrix(BooleanMatrix booleanMatrix) {
         return new GeneratingMatrix(booleanMatrixService.newMatrix(booleanMatrix));
     }
