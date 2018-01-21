@@ -4,44 +4,70 @@ import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
+import ldpc.service.basis.RowService;
+import ldpc.util.template.CodeWord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import static ldpc.service.wrapper.generating.GeneratingMatrixService.BORDER_FOR_EXCEPTION;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MinSumDecodeService {
 
+    public static final int BORDER_ITERATION = 100;
     private final BooleanMatrixService booleanMatrixService;
 
+    private final RowService rowService;
+
     @Autowired
-    public MinSumDecodeService(BooleanMatrixService booleanMatrixService) {
+    public MinSumDecodeService(BooleanMatrixService booleanMatrixService, RowService rowService) {
         this.booleanMatrixService = booleanMatrixService;
+        this.rowService = rowService;
     }
 
-    public BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, BooleanMatrix codeWord) {
+    boolean dummy(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
+        ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
+        return isCorrect(getSyndrome(parityCheckMatrix, codeWord));
+    }
+
+    boolean decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
         ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
 
-        BooleanMatrix localWord = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixService.newMatrix(codeWord));
-        BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);
-        int iterator = 0;
+        BooleanMatrix syndrome = getSyndrome(parityCheckMatrix, codeWord);
 
-        while (booleanMatrixService.getCountTrueElements(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).getElements()) > 0) {
-            // TODO: 03.01.2018 here is not logic(
-            iterator = checkIterator(iterator);
-            syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);
+        for (int i = 0; !isCorrect(syndrome) && i < BORDER_ITERATION; i++) {
+            // TODO: изменяешь значения массива double в CodeWord
+            syndrome = getSyndrome(parityCheckMatrix, codeWord);
         }
-        return booleanMatrixService.newMatrix(localWord);
+
+        return isCorrect(syndrome);
     }
 
+    private boolean isCorrect(BooleanMatrix syndrome) {
+        return booleanMatrixService.getCountTrueElements(booleanMatrixService.getTransposedBooleanMatrix(syndrome).getMatrix().get(0).getElements()) == 0;
+    }
 
-    private int checkIterator(int iterator) {
-        if (iterator < BORDER_FOR_EXCEPTION) {
-            iterator++;
-        } else {
-            throw new RuntimeException("Прошло " + BORDER_FOR_EXCEPTION + " циклов декодирования!");
-        }
-        return iterator;
+    private BooleanMatrix getSyndrome(ParityCheckMatrix parityCheckMatrix, CodeWord codeWord) {
+        BooleanMatrix localWord = getTransposed(codeWord);
+        return booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), localWord);
+    }
+
+    private BooleanMatrix getTransposed(CodeWord codeWord) {
+        BooleanMatrix code = getBooleanMatrix(codeWord);
+        return booleanMatrixService.getTransposedBooleanMatrix(code);
+    }
+
+    private BooleanMatrix getBooleanMatrix(CodeWord codeWord) {
+        List<Boolean> elements = codeWord.getSoftMetrics().stream()
+                .map(this::getBoolean)
+                .collect(Collectors.toList());
+        return booleanMatrixService.newMatrix(Collections.singletonList(rowService.newRow(elements)));
+    }
+
+    private Boolean getBoolean(Double element) {
+        return element > 0.5;
     }
 
 }

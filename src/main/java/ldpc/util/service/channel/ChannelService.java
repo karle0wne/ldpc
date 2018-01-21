@@ -1,7 +1,8 @@
 package ldpc.util.service.channel;
 
 import ldpc.matrix.basis.BooleanMatrix;
-import ldpc.service.basis.BooleanMatrixService;
+import ldpc.matrix.basis.Row;
+import ldpc.util.template.CodeWord;
 import ldpc.util.template.LDPCEnums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,26 +10,23 @@ import org.springframework.stereotype.Service;
 @Service
 public class ChannelService {
 
-    private final BinarySymmetricChannelService binarySymmetricChannelService;
-
-    private final BooleanMatrixService booleanMatrixService;
+    private final AWGNService AWGNService;
 
     @Autowired
-    public ChannelService(BinarySymmetricChannelService binarySymmetricChannelService, BooleanMatrixService booleanMatrixService) {
-        this.binarySymmetricChannelService = binarySymmetricChannelService;
-        this.booleanMatrixService = booleanMatrixService;
+    public ChannelService(AWGNService AWGNService) {
+        this.AWGNService = AWGNService;
     }
 
-    public BooleanMatrix send(BooleanMatrix codeWord, LDPCEnums.TypeOfChannel typeOfChannel) {
+    public CodeWord send(BooleanMatrix codeWord, LDPCEnums.TypeOfChannel typeOfChannel, int percentage) {
+        Row row = codeWord.getMatrix().get(0);
         if (typeOfChannel == null) {
-            return booleanMatrixService.newMatrix(codeWord);
+            return AWGNService.dummy(row);
         }
         switch (typeOfChannel) {
             case AWGN:
-                // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-23
-                return binarySymmetricChannelService.send(codeWord, 0.03D);
+                return AWGNService.send(row, percentage);
             default:
-                return booleanMatrixService.newMatrix(codeWord);
+                return AWGNService.dummy(row);
         }
     }
 }

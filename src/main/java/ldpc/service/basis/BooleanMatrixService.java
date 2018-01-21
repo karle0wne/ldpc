@@ -3,7 +3,6 @@ package ldpc.service.basis;
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.basis.Column;
 import ldpc.matrix.basis.Row;
-import ldpc.util.MathUtils;
 import ldpc.util.template.ColumnPair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -93,6 +92,21 @@ public class BooleanMatrixService {
         return (leftBooleanMatrix.getSizeX() == rightBooleanMatrix.getSizeY());
     }
 
+    private double getDensity(List<Row> matrix) {
+        long count = matrix.stream()
+                .mapToLong(row -> getCountTrueElements(row.getElements()))
+                .sum();
+        int countElements = matrix.size() * matrix.get(0).getElements().size();
+        return getPercentage(count, countElements);
+    }
+
+    private double getPercentage(double part, double all) {
+        return ((part / all) * 100.0d);
+    }
+
+    /*
+    * блок внешних служебных функций
+    * */
     public List<Integer> getPositionsTrueElements(List<Boolean> elements) {
         return IntStream.range(0, elements.size())
                 .filter(elements::get)
@@ -104,9 +118,6 @@ public class BooleanMatrixService {
         return new ArrayList<>(Collections.nCopies(size, element));
     }
 
-    /*
-    * блок внешних служебных функций
-    * */
     public List<Boolean> xor(List<Boolean> elementsA, List<Boolean> elementsB) {
         int size = elementsA.size() >= elementsB.size() ? elementsA.size() : elementsB.size();
         return IntStream.range(0, size)
@@ -157,14 +168,6 @@ public class BooleanMatrixService {
 
     public Column getMask(BooleanMatrix booleanMatrix) {
         return columnService.newColumn(generateElements(booleanMatrix.getSizeY(), true));
-    }
-
-    private double getDensity(List<Row> matrix) {
-        long count = matrix.stream()
-                .mapToLong(row -> getCountTrueElements(row.getElements()))
-                .sum();
-        int countElements = matrix.size() * matrix.get(0).getElements().size();
-        return MathUtils.getPercentage(count, countElements);
     }
 
     public BooleanMatrix removeColumns(BooleanMatrix booleanMatrix, List<Integer> columns) {
