@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class LDPCMatrixService {
@@ -56,12 +57,12 @@ public class LDPCMatrixService {
         Long maxK = matrix.stream()
                 .mapToLong(row -> booleanMatrixService.getCountTrueElements(row.getElements()))
                 .max()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         Long minK = matrix.stream()
                 .mapToLong(row -> booleanMatrixService.getCountTrueElements(row.getElements()))
                 .min()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         if (!Objects.equals(minK, maxK)) {
             throw new RuntimeException("Укажите LDPC матрицу с одинаковым количеством единиц в строках!");
@@ -74,12 +75,12 @@ public class LDPCMatrixService {
         Long maxJ = matrix.stream()
                 .mapToLong(column -> booleanMatrixService.getCountTrueElements(column.getElements()))
                 .max()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         Long minJ = matrix.stream()
                 .mapToLong(column -> booleanMatrixService.getCountTrueElements(column.getElements()))
                 .min()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
 
         if (!Objects.equals(minJ, maxJ)) {
             throw new RuntimeException("Укажите LDPC матрицу с одинаковым количеством единиц в столбцах!");
@@ -89,32 +90,39 @@ public class LDPCMatrixService {
 
     private int getG(ParityCheckMatrix parityCheckMatrix) {
         BooleanMatrix booleanMatrixStart = booleanMatrixService.newMatrix(parityCheckMatrix.getBooleanMatrix());
-        int tier_level;
 
-        for (int i = 0; i < booleanMatrixStart.getSizeY(); i++) {
+        List<Integer> tierLevels = new ArrayList<>();
 
-            List<Integer> columnsForDelete = booleanMatrixService.getPositionsTrueElements(booleanMatrixStart.getMatrix().get(i).getElements());
+        IntStream.range(0, booleanMatrixStart.getSizeY())
+                .forEach(
+                        i -> {
+                            List<Integer> columnsForDelete = booleanMatrixService.getPositionsTrueElements(booleanMatrixStart.getMatrix().get(i).getElements());
 
-            BooleanMatrix transposedBooleanMatrix = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixStart);
+                            BooleanMatrix transposedBooleanMatrix = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixStart);
 
-            BooleanMatrix booleanMatrix = booleanMatrixService.removeColumn(transposedBooleanMatrix, i);
+                            BooleanMatrix booleanMatrix = booleanMatrixService.removeColumn(transposedBooleanMatrix, i);
+                            int tierLevel;
+                            for (tierLevel = 0; !booleanMatrixService.isEmpty(booleanMatrix) && !checkNotUniqueness(columnsForDelete); tierLevel++) {
 
-            for (tier_level = 0; !booleanMatrixService.isEmpty(booleanMatrix) && !checkNotUniqueness(columnsForDelete); tier_level++) {
+                                List<Integer> columnsForDeleteForNextTierLevel = getColumnsForDelete(columnsForDelete, booleanMatrix);
 
-                List<Integer> columnsForDeleteForNextTierLevel = getColumnsForDelete(columnsForDelete, booleanMatrix);
+                                transposedBooleanMatrix = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixService.newMatrix(booleanMatrix));
 
-                transposedBooleanMatrix = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixService.newMatrix(booleanMatrix));
+                                booleanMatrix = booleanMatrixService.removeColumns(transposedBooleanMatrix, columnsForDelete);
 
-                booleanMatrix = booleanMatrixService.removeColumns(transposedBooleanMatrix, columnsForDelete);
+                                columnsForDelete = new ArrayList<>(columnsForDeleteForNextTierLevel);
+                            }
 
-                columnsForDelete = new ArrayList<>(columnsForDeleteForNextTierLevel);
-            }
+                            if (checkNotUniqueness(columnsForDelete)) {
+                                int trueTierLevel = (tierLevel + 1) * 2;
+                                tierLevels.add(trueTierLevel);
+                            }
+                        }
+                );
 
-            if (checkNotUniqueness(columnsForDelete)) {
-                return (tier_level + 1) * 2;
-            }
-        }
-        throw new RuntimeException("Не могу посчитать обхват матрицы G, проверьте алгоритм и матрицу!");
+        return tierLevels.stream()
+                .min(Comparator.comparing(Integer::intValue))
+                .orElseThrow(() -> new RuntimeException("Не удалось найти обхват, проверьте матрицу!"));
     }
 
     private List<Integer> getColumnsForDelete(List<Integer> numbersRowsForSearch, BooleanMatrix booleanMatrix) {

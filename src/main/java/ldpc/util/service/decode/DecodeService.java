@@ -21,12 +21,14 @@ public class DecodeService {
     }
 
     public BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, BooleanMatrix codeWord, LDPCEnums.TypeOfDecoding typeOfDecoding) {
+        if (typeOfDecoding == null) {
+            BooleanMatrix localWord = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixService.newMatrix(codeWord));
+            return booleanMatrixService.newMatrix(localWord);
+        }
         switch (typeOfDecoding) {
-            case MIN_SUM_DUMMY:
+            case MIN_SUM:
                 // TODO: 16.12.2017 https://krsk-sibsau-dev.myjetbrains.com/youtrack/issue/LDPC-3
                 return minSumDecodeService.decode(matrixLDPC, codeWord);
-            case DUMMY:
-                return booleanMatrixService.newMatrix(codeWord);
             default:
                 return booleanMatrixService.newMatrix(codeWord);
         }
