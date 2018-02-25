@@ -10,13 +10,15 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.log;
+
 @Service
 public class AWGNService {
 
-    public static final double DESIRED_STANDARD_DEVIATION = 100.0D;
-    public static final double DESIRED_MEAN = 500.0D;
-    private static double TOP_BORDER;
-    private static double BOTTOM_BORDER;
+    private static final double DESIRED_STANDARD_DEVIATION = 100.0D;
+    private static final double DESIRED_MEAN = 500.0D;
+    private static double RIGHT_BORDER;
+    private static double LEFT_BORDER;
 
     private final CodeWordService codeWordService;
 
@@ -27,8 +29,8 @@ public class AWGNService {
 
     CodeWord send(Row codeWord, int percentage) {
         int border = getBorder(percentage);
-        TOP_BORDER = DESIRED_MEAN + (double) border;
-        BOTTOM_BORDER = DESIRED_MEAN - (double) border;
+        RIGHT_BORDER = DESIRED_MEAN + (double) border;
+        LEFT_BORDER = DESIRED_MEAN - (double) border;
 
         return defectRow(codeWord);
     }
@@ -51,7 +53,7 @@ public class AWGNService {
 
     private Double checkByGaussian(Random random, Boolean element) {
         double value = random.nextGaussian() * DESIRED_STANDARD_DEVIATION + DESIRED_MEAN;
-        if (isRange(value, BOTTOM_BORDER, TOP_BORDER)) {
+        if (isRange(value, LEFT_BORDER, RIGHT_BORDER)) {
             return getSoftMetric(random, element);
         } else {
             return getSoftMetric(random, !element);
@@ -60,15 +62,17 @@ public class AWGNService {
 
     private double getSoftMetric(Random random, Boolean element) {
         if (element) {
-            return getSoftMetric(random, 0.5D, 1.0D);
+            double softMetric = getSoftMetric(random);
+            return log((1 - softMetric) / (softMetric));
         } else {
-            return getSoftMetric(random, 0.0D, 0.5D);
+            double softMetric = getSoftMetric(random);
+            return log((softMetric) / (1 - softMetric));
         }
     }
 
-    private double getSoftMetric(Random random, double left, double right) {
+    private double getSoftMetric(Random random) {
         double softMetric = random.nextDouble();
-        while (!isRange(softMetric, left, right)) {
+        while (!isRange(softMetric, 0.5D, 1.0D)) {
             softMetric = random.nextDouble();
         }
         return softMetric;

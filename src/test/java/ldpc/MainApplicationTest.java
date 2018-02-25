@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static ldpc.util.template.LDPCEnums.TypeOfCoding.GIRTH8;
+import static ldpc.util.template.LDPCEnums.TypeOfCoding.DEFAULT;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {MainApplicationTest.class})
@@ -27,7 +27,7 @@ public class MainApplicationTest {
 
     @Test
     public void ldpc() {
-        standService.demoStandLDPC(GIRTH8, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.MIN_SUM);
+        standService.demoStandLDPC(DEFAULT, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.MIN_SUM);
     }
 
 /*

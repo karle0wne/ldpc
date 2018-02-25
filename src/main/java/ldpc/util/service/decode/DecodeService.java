@@ -23,6 +23,8 @@ public class DecodeService {
         switch (typeOfDecoding) {
             case MIN_SUM:
                 return minSumDecodeService.decode(matrixLDPC, codeWord);
+            case DEFAULT:
+                return minSumDecodeService.dummy(matrixLDPC, codeWord);
             default:
                 return minSumDecodeService.dummy(matrixLDPC, codeWord);
         }

@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -44,6 +41,8 @@ public class ParityCheckMatrixService {
         switch (typeOfCoding) {
             case GIRTH8:
                 return generateWithGEight(3, 2);
+            case DEFAULT:
+                return createPreparedParityCheckMatrix();
             default:
                 return newParityCheckMatrix(booleanMatrixService.newMatrix(Collections.emptyList()));
         }
@@ -52,6 +51,16 @@ public class ParityCheckMatrixService {
     /*
     * блок внутренних служебных функций
     * */
+
+    public ParityCheckMatrix createPreparedParityCheckMatrix() {
+        List<Row> matrix = new ArrayList<>();
+        matrix.add(rowService.createRow(1, 1, 0, 0, 1, 0));
+        matrix.add(rowService.createRow(0, 1, 1, 0, 0, 1));
+        matrix.add(rowService.createRow(0, 0, 1, 1, 1, 0));
+        matrix.add(rowService.createRow(1, 0, 0, 1, 0, 1));
+
+        return new ParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
+    }
     private ParityCheckMatrix generateWithGEight(int k, int g) {
         if (g > k) {
             throw new RuntimeException("G должен быть не больше K!");
