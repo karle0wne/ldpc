@@ -9,22 +9,24 @@ import org.springframework.stereotype.Service;
 @Service
 public class DecodeService {
 
-    private final MinSumDecodeService minSumDecodeService;
+    private final SumProductDecodeService sumProductDecodeService;
 
     @Autowired
-    public DecodeService(MinSumDecodeService minSumDecodeService) {
-        this.minSumDecodeService = minSumDecodeService;
+    public DecodeService(SumProductDecodeService sumProductDecodeService) {
+        this.sumProductDecodeService = sumProductDecodeService;
     }
 
     public boolean decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord, LDPCEnums.TypeOfDecoding typeOfDecoding) {
         if (typeOfDecoding == null) {
-            return minSumDecodeService.dummy(matrixLDPC, codeWord);
+            return sumProductDecodeService.dummy(matrixLDPC, codeWord);
         }
         switch (typeOfDecoding) {
             case MIN_SUM:
-                return minSumDecodeService.decode(matrixLDPC, codeWord);
+                return sumProductDecodeService.decode(matrixLDPC, codeWord);
+            case DEFAULT:
+                return sumProductDecodeService.dummy(matrixLDPC, codeWord);
             default:
-                return minSumDecodeService.dummy(matrixLDPC, codeWord);
+                return sumProductDecodeService.dummy(matrixLDPC, codeWord);
         }
     }
 }

@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static ldpc.util.service.decode.MinSumDecodeService.BORDER_ITERATION;
+import static ldpc.util.service.decode.SumProductDecodeService.BORDER_ITERATION;
 
 /**
  * Сервис для порождающей матрицы
