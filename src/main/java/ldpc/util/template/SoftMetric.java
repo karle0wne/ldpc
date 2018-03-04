@@ -34,4 +34,32 @@ public class SoftMetric {
         this.sign = metric / Math.abs(metric);
         this.metric = metric;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        SoftMetric that = (SoftMetric) o;
+
+        if (column != that.column) {
+            return false;
+        }
+        if (row != that.row) {
+            return false;
+        }
+        return Double.compare(that.metric, metric) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = column;
+        result = 31 * result + row;
+        temp = Double.doubleToLongBits(metric);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
 }

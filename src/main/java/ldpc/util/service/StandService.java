@@ -19,11 +19,11 @@ import java.util.stream.IntStream;
 public class StandService {
 
     private static final String DELIMITER = "\n";
-    private static final int COUNT_GENERATION = 10;
+    private static final int COUNT_GENERATION = 1000;
     private static final int START_BORDER = 1;
     private static final int TO_PERCENTAGE = 100;
     private static final int BORDER_ITERATOR = 2;
-    private static final int END_BORDER = 28; //больше 53% уже 99% значений , проверять нет смысла
+    private static final int END_BORDER = 50; //больше 53% уже 99% значений , проверять нет смысла
     private final BooleanMatrixService booleanMatrixService;
 
     private final GeneratingMatrixService generatingMatrixService;

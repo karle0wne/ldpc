@@ -9,14 +9,13 @@ import ldpc.service.basis.RowService;
 import ldpc.util.service.CodeWordService;
 import ldpc.util.template.CodeWord;
 import ldpc.util.template.SoftMetric;
-import ldpc.util.template.SoftMetricMatrix;
-import ldpc.util.template.SoftMetricRow;
+import ldpc.util.template.SoftMetricRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -48,11 +47,10 @@ public class MinSumDecodeService {
     boolean decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
         ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
 
-        SoftMetricMatrix lMatrix = new SoftMetricMatrix();
-        SoftMetricMatrix zMatrix = new SoftMetricMatrix();
-        CodeWord decode = codeWordService.newCodeWord(codeWord.getSoftMetrics());
+        SoftMetricRepository lMatrix = new SoftMetricRepository();
+        SoftMetricRepository zMatrix = new SoftMetricRepository();
 
-        BooleanMatrix syndrome = getSyndrome(parityCheckMatrix, decode);
+        BooleanMatrix syndrome = getSyndrome(parityCheckMatrix, codeWord);
 
         for (int i = 0; !isCorrect(syndrome) && i < BORDER_ITERATION; i++) {
             lMatrix.clear();
@@ -60,74 +58,55 @@ public class MinSumDecodeService {
             fillLMatrix(codeWord, parityCheckMatrix, lMatrix);
 
             if (!zMatrix.isEmpty()) {
-                IntStream.range(0, zMatrix.xSize())
-                        .forEach(
-                                j -> {
-                                    double sum = zMatrix.getColumn(j).getAll().stream()
-                                            .mapToDouble(SoftMetric::getMetric)
-                                            .sum();
-                                    IntStream.range(0, zMatrix.ySize())
-                                            .forEach(
-                                                    k -> {
-                                                        Double l = lMatrix.getColumn(j).get(k).getMetric();
-                                                        Double z = zMatrix.getColumn(j).get(k).getMetric();
-                                                        lMatrix.setValue(j, k, l + sum - z);
-                                                    }
-                                            );
-                                }
-                        );
+                zMatrix.getMetricsByColumnByRow().forEach(
+                        (column, map) -> {
+                            double sum = map.values().stream()
+                                    .mapToDouble(SoftMetric::getMetric)
+                                    .sum();
+
+                            map.forEach(
+                                    (row, softMetric) -> lMatrix.setMetric(column, row, lMatrix.getMetric(column, row) + sum - softMetric.getMetric())
+                            );
+                        }
+                );
             }
 
             zMatrix.clear();
 
-            IntStream.range(0, lMatrix.ySize())
-                    .forEach(
-                            j -> {
-                                SoftMetricRow softMetricRow = new SoftMetricRow();
+            lMatrix.getMetricsByRowByColumn().forEach(
+                    (row, map) -> {
+                        double sum = map.values().stream()
+                                .map(softMetric -> getHyperbolicArcTan(softMetric.getMetric()))
+                                .mapToDouble(value -> value)
+                                .sum();
 
-                                double sum = lMatrix.getRow(j).getAll().stream()
-                                        .map(softMetric -> getHyperbolicArcTan(softMetric.getMetric()))
-                                        .mapToDouble(value -> value)
-                                        .sum();
+                        double signSum = map.values().stream()
+                                .map(SoftMetric::getSign)
+                                .reduce((a, b) -> a * b)
+                                .orElse(0.0D);
 
-                                Double signSum = lMatrix.getRow(j).getAll().stream()
-                                        .map(SoftMetric::getSign)
-                                        .reduce((a, b) -> a * b)
-                                        .orElse(0.0D);
+                        map.forEach(
+                                (column, softMetric) -> {
+                                    double value = getHyperbolicArcTan(sum - getHyperbolicArcTan(softMetric.getMetric()));
+                                    double a = signSum * softMetric.getSign();
+                                    zMatrix.addMetric(new SoftMetric(column, row, Math.max(Math.min(a * value, 19.07D), -19.07D)));
+                                }
+                        );
+                    }
+            );
 
-                                IntStream.range(0, lMatrix.xSize())
-                                        .forEach(
-                                                k -> {
-                                                    SoftMetric softMetric = lMatrix.getRow(j).get(k);
-                                                    Double value = getHyperbolicArcTan(sum - getHyperbolicArcTan(softMetric.getMetric()));
-                                                    double a = signSum * softMetric.getSign();
-                                                    softMetricRow.addSoftMetric(new SoftMetric(softMetric.getColumn(), softMetric.getRow(), Math.max(Math.min(a * value, 19.07D), -19.07D)));
-                                                }
-                                        );
-                                zMatrix.addRow(softMetricRow);
-                            }
-                    );
+            List<Double> values = new ArrayList<>();
 
-            Map<Integer, List<SoftMetric>> softMetricsByColumn = zMatrix.getAll().stream()
-                    .flatMap(row -> row.getAll().stream())
-                    .collect(
-                            Collectors.groupingBy(
-                                    SoftMetric::getColumn,
-                                    Collectors.mapping(softMetric -> softMetric, Collectors.toList())
-                            )
-                    );
+            zMatrix.getMetricsByColumnByRow().forEach(
+                    (column, map) -> {
+                        double sum = map.values().stream()
+                                .mapToDouble(SoftMetric::getMetric)
+                                .sum();
+                        values.add(codeWord.getSoftMetrics().get(column) + sum);
+                    }
+            );
 
-            IntStream.range(0, decode.getSoftMetrics().size())
-                    .forEach(
-                            j -> {
-                                double sum = softMetricsByColumn.get(j).stream()
-                                        .mapToDouble(SoftMetric::getMetric)
-                                        .sum();
-                                decode.getSoftMetrics().set(j, decode.getSoftMetrics().get(j) + sum);
-                            }
-                    );
-
-            syndrome = getSyndrome(parityCheckMatrix, decode);
+            syndrome = getSyndrome(parityCheckMatrix, codeWordService.newCodeWord(values));
         }
 
         return isCorrect(syndrome);
@@ -138,14 +117,12 @@ public class MinSumDecodeService {
         return Math.log((exp + 1) / (exp - 1));
     }
 
-    private void fillLMatrix(CodeWord codeWord, ParityCheckMatrix parityCheckMatrix, SoftMetricMatrix lMatrix) {
+    private void fillLMatrix(CodeWord codeWord, ParityCheckMatrix parityCheckMatrix, SoftMetricRepository lMatrix) {
         IntStream.range(0, parityCheckMatrix.getBooleanMatrix().getSizeY())
                 .forEach(
                         rowId -> {
-                            SoftMetricRow softMetricRow = new SoftMetricRow();
                             List<Integer> columnIds = booleanMatrixService.getPositionsTrueElements(parityCheckMatrix.getBooleanMatrix().getMatrix().get(rowId).getElements());
-                            columnIds.forEach(columnId -> softMetricRow.addSoftMetric(new SoftMetric(columnId, rowId, codeWord.getSoftMetrics().get(columnId))));
-                            lMatrix.addRow(softMetricRow);
+                            columnIds.forEach(columnId -> lMatrix.addMetric(new SoftMetric(columnId, rowId, codeWord.getSoftMetrics().get(columnId))));
                         }
                 );
     }
