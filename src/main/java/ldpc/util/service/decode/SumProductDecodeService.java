@@ -4,7 +4,6 @@ import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
-import ldpc.service.basis.ColumnService;
 import ldpc.service.basis.RowService;
 import ldpc.util.service.CodeWordService;
 import ldpc.util.template.CodeWord;
@@ -20,23 +19,21 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
-public class MinSumDecodeService {
+public class SumProductDecodeService {
 
     public static final int BORDER_ITERATION = 100;
+    
     private final BooleanMatrixService booleanMatrixService;
 
     private final RowService rowService;
 
-    @Autowired
-    private CodeWordService codeWordService;
+    private final CodeWordService codeWordService;
 
     @Autowired
-    private ColumnService columnService;
-
-    @Autowired
-    public MinSumDecodeService(BooleanMatrixService booleanMatrixService, RowService rowService) {
+    public SumProductDecodeService(BooleanMatrixService booleanMatrixService, RowService rowService, CodeWordService codeWordService) {
         this.booleanMatrixService = booleanMatrixService;
         this.rowService = rowService;
+        this.codeWordService = codeWordService;
     }
 
     boolean dummy(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
