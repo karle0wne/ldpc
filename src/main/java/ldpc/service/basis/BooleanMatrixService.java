@@ -3,7 +3,6 @@ package ldpc.service.basis;
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.basis.Column;
 import ldpc.matrix.basis.Row;
-import ldpc.util.template.ColumnPair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,20 +36,6 @@ public class BooleanMatrixService {
     /*
     * блок основных функций!
     * */
-    public BooleanMatrix recoveryBySwapHistory(BooleanMatrix booleanMatrix, List<ColumnPair> swapHistory) {
-        List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
-        Collections.reverse(swapHistory);
-        swapHistory.forEach(
-                columnPair ->
-                        Collections.swap(
-                                matrix,
-                                columnPair.getColumnNumberRight(),
-                                columnPair.getColumnNumberLeft()
-                        )
-        );
-        return getTransposedBooleanMatrix(newMatrix(rowService.mapColumnsToRows(matrix)));
-    }
-
     public BooleanMatrix getTransposedBooleanMatrix(BooleanMatrix booleanMatrix) {
         List<Column> columns = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
         List<Row> rows = rowService.mapColumnsToRows(columns);
@@ -107,6 +92,16 @@ public class BooleanMatrixService {
     /*
     * блок внешних служебных функций
     * */
+    public double getProbabilityBitsErrors(List<Boolean> valuesLeft, List<Boolean> valuesRight) {
+        return (double) IntStream.range(0, valuesLeft.size())
+                .filter(i -> !Objects.equals(valuesLeft.get(i), valuesRight.get(i)))
+                .count() / (double) valuesLeft.size();
+    }
+
+    public List<Boolean> getFirstRowValues(BooleanMatrix informationWord) {
+        return informationWord.getMatrix().get(0).getElements();
+    }
+
     public List<Integer> getPositionsTrueElements(List<Boolean> elements) {
         return IntStream.range(0, elements.size())
                 .filter(elements::get)

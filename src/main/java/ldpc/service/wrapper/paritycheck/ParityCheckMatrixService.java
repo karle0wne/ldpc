@@ -36,21 +36,42 @@ public class ParityCheckMatrixService {
     * */
     public ParityCheckMatrix generateParityCheckMatrix(LDPCEnums.TypeOfCoding typeOfCoding) {
         if (typeOfCoding == null) {
-            return newParityCheckMatrix(booleanMatrixService.newMatrix(Collections.emptyList()));
+            return dummy();
         }
         switch (typeOfCoding) {
             case GIRTH8:
                 return generateWithGEight(3, 2);
-            case DEFAULT:
-                return createPreparedParityCheckMatrix();
             default:
-                return newParityCheckMatrix(booleanMatrixService.newMatrix(Collections.emptyList()));
+                return dummy();
         }
+    }
+
+    private ParityCheckMatrix dummy() {
+        return createPreparedParityCheckMatrix();
     }
 
     /*
     * блок внутренних служебных функций
     * */
+    public ParityCheckMatrix preparedPCM4() {
+        List<Row> matrix = new ArrayList<>();
+        matrix.add(rowService.createRow(1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1));
+        matrix.add(rowService.createRow(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        matrix.add(rowService.createRow(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0));
+        matrix.add(rowService.createRow(0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
+    }
 
     public ParityCheckMatrix createPreparedParityCheckMatrix() {
         List<Row> matrix = new ArrayList<>();
@@ -61,6 +82,7 @@ public class ParityCheckMatrixService {
 
         return new ParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
+
     private ParityCheckMatrix generateWithGEight(int k, int g) {
         if (g > k) {
             throw new RuntimeException("G должен быть не больше K!");

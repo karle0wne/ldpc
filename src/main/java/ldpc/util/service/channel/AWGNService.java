@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import static java.lang.Math.log;
-
 @Service
 public class AWGNService {
 
@@ -28,19 +26,10 @@ public class AWGNService {
     }
 
     CodeWord send(Row codeWord, int percentage) {
-        int border = getBorder(percentage);
-        RIGHT_BORDER = DESIRED_MEAN + (double) border;
-        LEFT_BORDER = DESIRED_MEAN - (double) border;
+        RIGHT_BORDER = DESIRED_MEAN + (double) percentage;
+        LEFT_BORDER = DESIRED_MEAN - (double) percentage;
 
         return defectRow(codeWord);
-    }
-
-    CodeWord dummy(Row codeWord) {
-        Random random = new Random();
-        List<Double> softMetrics = codeWord.getElements().stream()
-                .map(element -> getSoftMetric(random, element))
-                .collect(Collectors.toList());
-        return codeWordService.newCodeWord(softMetrics);
     }
 
     private CodeWord defectRow(Row row) {
@@ -53,43 +42,10 @@ public class AWGNService {
 
     private Double checkByGaussian(Random random, Boolean element) {
         double value = random.nextGaussian() * DESIRED_STANDARD_DEVIATION + DESIRED_MEAN;
-        if (isRange(value, LEFT_BORDER, RIGHT_BORDER)) {
-            return getSoftMetric(random, element);
+        if (codeWordService.isRange(value, LEFT_BORDER, RIGHT_BORDER)) {
+            return codeWordService.getSoftMetric(random, element);
         } else {
-            return getSoftMetric(random, !element);
+            return codeWordService.getSoftMetric(random, !element);
         }
-    }
-
-    private double getSoftMetric(Random random, Boolean element) {
-        if (element) {
-            double softMetric = getSoftMetric(random);
-            return log((1 - softMetric) / (softMetric));
-        } else {
-            double softMetric = getSoftMetric(random);
-            return log((softMetric) / (1 - softMetric));
-        }
-    }
-
-    private double getSoftMetric(Random random) {
-        double softMetric = random.nextDouble();
-        while (!isRange(softMetric, 0.5D, 1.0D)) {
-            softMetric = random.nextDouble();
-        }
-        return softMetric;
-    }
-
-    private boolean isRange(double value, double left, double right) {
-        return left < value && value < right;
-    }
-
-    private int getBorder(int percentage) {
-        int checkedPercentage = checkedPercentage(percentage);
-        return checkedPercentage * 5;
-    }
-
-    private int checkedPercentage(int percentage) {
-        return percentage >= 100
-                ? 99
-                : (percentage <= 0 ? 1 : percentage);
     }
 }
