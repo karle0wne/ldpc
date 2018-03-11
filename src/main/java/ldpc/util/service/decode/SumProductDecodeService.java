@@ -4,7 +4,7 @@ import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
-import ldpc.service.basis.RowService;
+import ldpc.service.wrapper.generating.GeneratingMatrixService;
 import ldpc.util.service.CodeWordService;
 import ldpc.util.template.CodeWord;
 import ldpc.util.template.SoftMetric;
@@ -12,42 +12,35 @@ import ldpc.util.template.SoftMetricRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
 public class SumProductDecodeService {
 
     public static final int BORDER_ITERATION = 100;
-    
-    private final BooleanMatrixService booleanMatrixService;
-
-    private final RowService rowService;
 
     private final CodeWordService codeWordService;
+    private final BooleanMatrixService booleanMatrixService;
+    private final GeneratingMatrixService generatingMatrixService;
 
     @Autowired
-    public SumProductDecodeService(BooleanMatrixService booleanMatrixService, RowService rowService, CodeWordService codeWordService) {
-        this.booleanMatrixService = booleanMatrixService;
-        this.rowService = rowService;
+    public SumProductDecodeService(CodeWordService codeWordService, BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService) {
         this.codeWordService = codeWordService;
+        this.booleanMatrixService = booleanMatrixService;
+        this.generatingMatrixService = generatingMatrixService;
     }
 
-    boolean dummy(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
-        ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
-        return isCorrect(getSyndrome(parityCheckMatrix, codeWord));
-    }
 
-    boolean decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
+    BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
         ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
 
         SoftMetricRepository lMatrix = new SoftMetricRepository();
         SoftMetricRepository zMatrix = new SoftMetricRepository();
 
         BooleanMatrix syndrome = getSyndrome(parityCheckMatrix, codeWord);
+
+        CodeWord result = codeWordService.newCodeWord(codeWord);
 
         for (int i = 0; !isCorrect(syndrome) && i < BORDER_ITERATION; i++) {
             lMatrix.clear();
@@ -92,21 +85,21 @@ public class SumProductDecodeService {
                     }
             );
 
-            List<Double> values = new ArrayList<>();
+            result.getSoftMetrics().clear();
 
             zMatrix.getMetricsByColumnByRow().forEach(
                     (column, map) -> {
                         double sum = map.values().stream()
                                 .mapToDouble(SoftMetric::getMetric)
                                 .sum();
-                        values.add(codeWord.getSoftMetrics().get(column) + sum);
+                        result.getSoftMetrics().add(codeWord.getSoftMetrics().get(column) + sum);
                     }
             );
 
-            syndrome = getSyndrome(parityCheckMatrix, codeWordService.newCodeWord(values));
+            syndrome = getSyndrome(parityCheckMatrix, codeWordService.newCodeWord(result));
         }
 
-        return isCorrect(syndrome);
+        return generatingMatrixService.recoveryBySwapHistory(codeWordService.getBooleanMatrix(codeWordService.newCodeWord(result)));
     }
 
     private Double getHyperbolicArcTan(Double value) {
@@ -134,19 +127,7 @@ public class SumProductDecodeService {
     }
 
     private BooleanMatrix getTransposed(CodeWord codeWord) {
-        BooleanMatrix code = getBooleanMatrix(codeWord);
+        BooleanMatrix code = codeWordService.getBooleanMatrix(codeWord);
         return booleanMatrixService.getTransposedBooleanMatrix(code);
     }
-
-    private BooleanMatrix getBooleanMatrix(CodeWord codeWord) {
-        List<Boolean> elements = codeWord.getSoftMetrics().stream()
-                .map(this::getBoolean)
-                .collect(Collectors.toList());
-        return booleanMatrixService.newMatrix(Collections.singletonList(rowService.newRow(elements)));
-    }
-
-    private Boolean getBoolean(Double element) {
-        return element < 0.0D;
-    }
-
 }

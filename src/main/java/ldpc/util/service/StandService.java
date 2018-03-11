@@ -13,6 +13,9 @@ import ldpc.util.template.LDPCEnums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.IntStream;
 
 @Service
@@ -20,10 +23,7 @@ public class StandService {
 
     private static final String DELIMITER = "\n";
     private static final int COUNT_GENERATION = 1000;
-    private static final int START_BORDER = 1;
-    private static final int TO_PERCENTAGE = 100;
-    private static final int BORDER_ITERATOR = 2;
-    private static final int END_BORDER = 50; //больше 53% уже 99% значений , проверять нет смысла
+    private static final int BORDER_ITERATOR = 3;
     private final BooleanMatrixService booleanMatrixService;
 
     private final GeneratingMatrixService generatingMatrixService;
@@ -43,51 +43,73 @@ public class StandService {
         this.decodeService = decodeService;
     }
 
-    public void demoStandLDPC(LDPCEnums.TypeOfCoding typeOfCoding,
-                              LDPCEnums.TypeOfChannel typeOfChannel,
-                              LDPCEnums.TypeOfDecoding typeOfDecoding) {
+    public void stand(LDPCEnums.TypeOfCoding typeOfCoding,
+                      LDPCEnums.TypeOfChannel typeOfChannel,
+                      LDPCEnums.TypeOfDecoding typeOfDecoding) {
         StrictLowDensityParityCheckMatrix matrix = ldpcMatrixService.generateLDPCMatrix(typeOfCoding);
         System.out.println(matrix.toString() + DELIMITER);
 
         GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(matrix.getParityCheckMatrix());
         System.out.println(generatingMatrix.toString() + DELIMITER);
 
-
-        IntStream.range(START_BORDER, END_BORDER)
+        List<Pair> pairs = new ArrayList<>();
+        IntStream.range(1, 72)
                 .map(i -> i * BORDER_ITERATOR)
                 .forEach(
                         i -> {
-                            double probabilityFalseDecode = (double) IntStream.range(0, COUNT_GENERATION)
-                                    .mapToObj(
-                                            value -> {
+                            Pair pair = new Pair(0.0D, 0.0D);
+                            IntStream.range(0, COUNT_GENERATION)
+                                    .forEach(
+                                            dummy -> {
                                                 BooleanMatrix informationWord = booleanMatrixService.generateInfoWord(generatingMatrix.getBooleanMatrix().getSizeY());
 
                                                 BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
 
                                                 CodeWord brokenCodeWord = channelService.send(codeWord, typeOfChannel, i);
 
-                                                return decodeService.decode(matrix, brokenCodeWord, typeOfDecoding);
+                                                BooleanMatrix decode = decodeService.decode(matrix, brokenCodeWord, typeOfDecoding);
+
+                                                pair.setKey(pair.getKey() + decodeService.getProbabilityBitsErrorsInformationWord(informationWord, decode));
+                                                pair.setValue(pair.getValue() + channelService.getProbabilityBitsErrorsCodeWord(codeWord, brokenCodeWord));
                                             }
-                                    )
-                                    .filter(elementTrue -> !elementTrue)
-                                    .count() / (double) COUNT_GENERATION;
-                            double percentage = probabilityFalseDecode * (double) TO_PERCENTAGE;
-                            System.out.println("Сигнал: " + i + "%, вероятность ошибки декодирования: " + (int) percentage + "%");
+                                    );
+
+                            pair.setKey(pair.getKey() / (double) COUNT_GENERATION);
+                            pair.setValue(pair.getValue() / (double) COUNT_GENERATION);
+                            double key = Math.log(1 / (pair.getKey() == 0.0d ? 0.0001 : pair.getKey()));
+                            pairs.add(new Pair(key, pair.getValue()));
                         }
                 );
+        pairs.sort(Comparator.comparing(Pair::getKey));
+        pairs.forEach(pair -> System.out.println(String.valueOf(pair.getKey()).replace('.', ',')));
+        System.out.println("--------------");
+        pairs.forEach(pair -> System.out.println(String.valueOf(pair.getValue()).replace('.', ',')));
     }
 
-/*
-    public void demoStandWithoutLDPC(LDPCEnums.TypeOfCoding typeOfCoding) {
-        ParityCheckMatrix parityCheckMatrix = parityCheckMatrixService.generateParityCheckMatrix(typeOfCoding);
+    private class Pair {
 
-        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(parityCheckMatrix);
+        private Double key;
+        private Double value;
 
-        BooleanMatrix informationWord = booleanMatrixService.generateInfoWord(generatingMatrix.getBooleanMatrix().getSizeY());
+        private Pair(Double key, Double value) {
+            this.key = key;
+            this.value = value;
+        }
 
-        BooleanMatrix recoveryCodeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
+        private Double getKey() {
+            return key;
+        }
 
-        BooleanMatrix syndrome = booleanMatrixService.multiplicationMatrix(parityCheckMatrix.getBooleanMatrix(), booleanMatrixService.getTransposedBooleanMatrix(recoveryCodeWord));
+        private void setKey(Double key) {
+            this.key = key;
+        }
+
+        private Double getValue() {
+            return value;
+        }
+
+        private void setValue(Double value) {
+            this.value = value;
+        }
     }
-*/
 }

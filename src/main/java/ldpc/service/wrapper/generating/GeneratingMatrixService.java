@@ -35,6 +35,8 @@ public class GeneratingMatrixService {
 
     private final ColumnService columnService;
 
+    private List<ColumnPair> columnPairs;
+
     @Autowired
     public GeneratingMatrixService(RowService rowService, BooleanMatrixService booleanMatrixService, ColumnService columnService) {
         this.rowService = rowService;
@@ -110,10 +112,38 @@ public class GeneratingMatrixService {
 
         GeneratingMatrix generatingMatrix = newGeneratingMatrix(booleanGeneratingMatrix);
 
+        setColumnPairs(swapHistory);
         /*
         * Восстанавливаем порядок столбцов в порождающей матрице
         * */
-        return newGeneratingMatrix(booleanMatrixService.recoveryBySwapHistory(generatingMatrix.getBooleanMatrix(), swapHistory));
+        return newGeneratingMatrix(recoveryBySwapHistory(generatingMatrix.getBooleanMatrix()));
+    }
+
+    public BooleanMatrix recoveryBySwapHistory(BooleanMatrix booleanMatrix) {
+        List<ColumnPair> swapHistory = new ArrayList<>(getColumnPairs());
+        List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
+        Collections.reverse(swapHistory);
+        swapHistory.forEach(
+                columnPair ->
+                        Collections.swap(
+                                matrix,
+                                columnPair.getColumnNumberRight(),
+                                columnPair.getColumnNumberLeft()
+                        )
+        );
+        return booleanMatrixService.newMatrix(booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixService.newMatrix(rowService.mapColumnsToRows(matrix))));
+    }
+
+    private List<ColumnPair> getColumnPairs() {
+        if (columnPairs == null) {
+            throw new NullPointerException("Нет истории перестановок проверочной матрицы!");
+        } else {
+            return new ArrayList<>(columnPairs);
+        }
+    }
+
+    private void setColumnPairs(List<ColumnPair> columnPairs) {
+        this.columnPairs = new ArrayList<>(columnPairs);
     }
 
     private boolean isCorrect(Column mask) {

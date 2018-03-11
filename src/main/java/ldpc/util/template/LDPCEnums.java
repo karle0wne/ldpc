@@ -3,13 +3,11 @@ package ldpc.util.template;
 public class LDPCEnums {
 
     public enum TypeOfDecoding {
-        MIN_SUM,
-        DEFAULT
+        PRODUCT_SUM
     }
 
     public enum TypeOfCoding {
-        GIRTH8,
-        DEFAULT
+        GIRTH8
     }
 
     public enum TypeOfChannel {
