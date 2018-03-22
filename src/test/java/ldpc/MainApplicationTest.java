@@ -29,7 +29,7 @@ public class MainApplicationTest {
 
     @Test
     public void name() throws Exception {
-        standService.stand(null, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.PRODUCT_SUM);
+        standService.stand(null, LDPCEnums.TypeOfChannel.AWGN, null);
     }
 
     @Test
