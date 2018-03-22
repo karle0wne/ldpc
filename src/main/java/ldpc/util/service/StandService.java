@@ -23,7 +23,6 @@ public class StandService {
 
     private static final String DELIMITER = "\n";
     private static final int COUNT_GENERATION = 1000;
-    private static final int BORDER_ITERATOR = 3;
     private final BooleanMatrixService booleanMatrixService;
 
     private final GeneratingMatrixService generatingMatrixService;
@@ -53,36 +52,33 @@ public class StandService {
         System.out.println(generatingMatrix.toString() + DELIMITER);
 
         List<Pair> pairs = new ArrayList<>();
-        IntStream.range(1, 72)
-                .map(i -> i * BORDER_ITERATOR)
-                .forEach(
-                        i -> {
-                            Pair pair = new Pair(0.0D, 0.0D);
-                            IntStream.range(0, COUNT_GENERATION)
-                                    .forEach(
-                                            dummy -> {
-                                                BooleanMatrix informationWord = booleanMatrixService.generateInfoWord(generatingMatrix.getBooleanMatrix().getSizeY());
 
-                                                BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
+        for (double i = 0.0d; i < 9.0d; i += 0.25D) {
+            Pair pair = new Pair(0.0D, 0.0D);
 
-                                                CodeWord brokenCodeWord = channelService.send(codeWord, typeOfChannel, i);
+            double signalPower = i;
+            IntStream.range(0, COUNT_GENERATION)
+                    .forEach(
+                            dummy -> {
+                                BooleanMatrix informationWord = booleanMatrixService.generateInfoWord(generatingMatrix.getBooleanMatrix().getSizeY());
 
-                                                BooleanMatrix decode = decodeService.decode(matrix, brokenCodeWord, typeOfDecoding);
+                                BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
 
-                                                pair.setKey(pair.getKey() + decodeService.getProbabilityBitsErrorsInformationWord(informationWord, decode));
-                                                pair.setValue(pair.getValue() + channelService.getProbabilityBitsErrorsCodeWord(codeWord, brokenCodeWord));
-                                            }
-                                    );
+                                CodeWord brokenCodeWord = channelService.send(codeWord, typeOfChannel, signalPower);
 
-                            pair.setKey(pair.getKey() / (double) COUNT_GENERATION);
-                            pair.setValue(pair.getValue() / (double) COUNT_GENERATION);
-                            double key = Math.log(1 / (pair.getKey() == 0.0d ? 0.0001 : pair.getKey()));
-                            pairs.add(new Pair(key, pair.getValue()));
-                        }
-                );
+                                BooleanMatrix decode = decodeService.decode(matrix, brokenCodeWord, typeOfDecoding);
+
+                                pair.setKey(pair.getKey() + signalPower);
+                                pair.setValue(pair.getValue() + channelService.getProbabilityBitsErrorsCodeWord(codeWord, brokenCodeWord));
+                            }
+                    );
+
+            pair.setKey(pair.getKey() / (double) COUNT_GENERATION);
+            pair.setValue(pair.getValue() / (double) COUNT_GENERATION);
+            pairs.add(new Pair(pair.getKey(), pair.getValue()));
+        }
+
         pairs.sort(Comparator.comparing(Pair::getKey));
-        pairs.forEach(pair -> System.out.println(String.valueOf(pair.getKey()).replace('.', ',')));
-        System.out.println("--------------");
         pairs.forEach(pair -> System.out.println(String.valueOf(pair.getValue()).replace('.', ',')));
     }
 
