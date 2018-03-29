@@ -47,13 +47,13 @@ public class ParityCheckMatrixService {
     }
 
     private ParityCheckMatrix dummy() {
-        return createPreparedParityCheckMatrix();
+        return createPreparedParityCheckMatrix12();
     }
 
     /*
     * блок внутренних служебных функций
     * */
-    public ParityCheckMatrix preparedPCM4() {
+    public ParityCheckMatrix createPreparedParityCheckMatrix6_2() {
         List<Row> matrix = new ArrayList<>();
         matrix.add(rowService.createRow(1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
         matrix.add(rowService.createRow(0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
@@ -73,7 +73,7 @@ public class ParityCheckMatrixService {
         return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
-    public ParityCheckMatrix createPreparedParityCheckMatrix() {
+    public ParityCheckMatrix createPreparedParityCheckMatrix6() {
         List<Row> matrix = new ArrayList<>();
         matrix.add(rowService.createRow(1, 1, 0, 0, 1, 0));
         matrix.add(rowService.createRow(0, 1, 1, 0, 0, 1));
@@ -81,6 +81,25 @@ public class ParityCheckMatrixService {
         matrix.add(rowService.createRow(1, 0, 0, 1, 0, 1));
 
         return new ParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
+    }
+
+    private ParityCheckMatrix createPreparedParityCheckMatrix12() {
+        List<Row> matrix = new ArrayList<>();
+        matrix.add(rowService.createRow(1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1));
+        matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0));
+        return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
     private ParityCheckMatrix generateWithGEight(int k, int g) {

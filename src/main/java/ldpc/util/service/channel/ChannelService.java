@@ -27,14 +27,14 @@ public class ChannelService {
         this.AWGNService = AWGNService;
     }
 
-    public CodeWord send(BooleanMatrix codeWord, LDPCEnums.TypeOfChannel typeOfChannel, int percentage) {
+    public CodeWord send(BooleanMatrix codeWord, LDPCEnums.TypeOfChannel typeOfChannel, double signalPower) {
         Row row = codeWord.getMatrix().get(0);
         if (typeOfChannel == null) {
             return dummy(row);
         }
         switch (typeOfChannel) {
             case AWGN:
-                return AWGNService.send(row, percentage);
+                return AWGNService.send(row, signalPower);
             default:
                 return dummy(row);
         }
