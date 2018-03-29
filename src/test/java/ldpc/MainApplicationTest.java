@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Random;
+import java.util.*;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {MainApplicationTest.class})
@@ -29,7 +29,7 @@ public class MainApplicationTest {
 
     @Test
     public void name() throws Exception {
-        standService.stand(null, LDPCEnums.TypeOfChannel.AWGN, null);
+        standService.stand(null, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.PRODUCT_SUM);
     }
 
     @Test
@@ -46,6 +46,62 @@ public class MainApplicationTest {
             double x = (double) error / 1000.0D;
             System.out.println(x);
         }
+    }
+
+    @Test
+    public void ddddd() throws Exception {
+        Random random = new Random();
+
+        for (int i = 820; i > 810; i--) {
+            double ii = (double) i / (double) 1000;
+            double x = 0;
+            for (int d = 0; d < 100; d++) {
+                int error = 0;
+                for (int i1 = 0; i1 < 100000; i1++) {
+                    double value = random.nextGaussian() * ii - 1;
+                    if (value >= 0) {
+                        error += 1;
+                    }
+                }
+                x += (double) error / (double) 100000;
+            }
+            double v = x / (double) 100;
+            System.out.println(String.valueOf(ii).replace(".", ","));
+            System.out.println(v);
+            System.out.println("-----");
+        }
+    }
+
+    @Test
+    public void aaaaaa() throws Exception {
+
+        for (double i = 2.0D; i > 0.0D; i -= 0.1D) {
+            System.out.println(i);
+            System.out.println("-----");
+        }
+
+    }
+
+    @Test
+    public void sxsxs() throws Exception {
+        Map<Double, Integer> map = new HashMap<>();
+        Random random = new Random();
+        for (int i1 = 0; i1 < 100000; i1++) {
+            double value = random.nextGaussian() * 2;
+            double v = value * (double) 100;
+            int v1 = (int) v;
+            double v2 = (double) v1 / 10;
+            map.merge(v2, 1, (a, b) -> a + b);
+        }
+        List<Map.Entry<Double, Integer>> collect = new ArrayList<>(map.entrySet());
+        collect.sort(Comparator.comparing(Map.Entry::getKey));
+        collect.forEach(
+                doubleIntegerEntry -> System.out.println(doubleIntegerEntry.getKey())
+        );
+        System.out.println("-----------------");
+        collect.forEach(
+                doubleIntegerEntry -> System.out.println(doubleIntegerEntry.getValue())
+        );
     }
 
     public boolean isRange(double value, double left, double right) {

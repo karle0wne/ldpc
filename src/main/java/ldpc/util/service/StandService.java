@@ -48,7 +48,7 @@ public class StandService {
         GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(matrix.getParityCheckMatrix());
         System.out.println(generatingMatrix.toString() + DELIMITER);
 
-        for (double i = 0.0d; i < 9.0d; i += 0.25D) {
+        for (double i = 1.0D; i < 4.25D; i += 0.25D) {
             DoubleWrapper doubleWrapper = new DoubleWrapper(0.0D);
 
             double signalPower = i;
@@ -63,7 +63,7 @@ public class StandService {
 
                                 BooleanMatrix decode = decodeService.decode(matrix, brokenCodeWord, typeOfDecoding);
 
-                                doubleWrapper.setValue(doubleWrapper.getValue() + channelService.getProbabilityBitsErrorsCodeWord(codeWord, brokenCodeWord));
+                                doubleWrapper.setValue(doubleWrapper.getValue() + decodeService.getProbabilityBitsErrorsInformationWord(informationWord, decode));
                             }
                     );
 
