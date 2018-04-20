@@ -69,12 +69,10 @@ public class AWGNService {
     }
 
     private double getGaussian(Random random, double signalPower, Double defaultSoftMetric) {
-        return random.nextGaussian() * gaussianCoefficient.get(signalPower) + defaultSoftMetric;
+        return 2 * (random.nextGaussian() * gaussianCoefficient.get(signalPower) + defaultSoftMetric) / (Math.pow(gaussianCoefficient.get(signalPower), 2.0d));
     }
 
     private Double getMetric(Boolean element) {
         return element ? -1. : 1.;
     }
-
-
 }

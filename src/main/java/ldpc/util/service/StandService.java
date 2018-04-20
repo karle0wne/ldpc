@@ -13,6 +13,12 @@ import ldpc.util.template.LDPCEnums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 @Service
@@ -42,11 +48,20 @@ public class StandService {
     public void stand(LDPCEnums.TypeOfCoding typeOfCoding,
                       LDPCEnums.TypeOfChannel typeOfChannel,
                       LDPCEnums.TypeOfDecoding typeOfDecoding) {
+        String fileName = getName(typeOfCoding) + getName(typeOfChannel) + getName(typeOfDecoding) + ".txt";
+
         StrictLowDensityParityCheckMatrix matrix = ldpcMatrixService.generateLDPCMatrix(typeOfCoding);
-        System.out.println(matrix.toString() + DELIMITER);
+        String ldpcMatrixString = matrix.toString() + DELIMITER + DELIMITER;
+        System.out.println(ldpcMatrixString);
 
         GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(matrix.getParityCheckMatrix());
-        System.out.println(generatingMatrix.toString() + DELIMITER);
+        String generatingMatrixString = generatingMatrix.toString() + DELIMITER + DELIMITER;
+        System.out.println(generatingMatrixString);
+        String matrixParameters = ldpcMatrixString + generatingMatrixString;
+
+        writeToFile(fileName, matrixParameters);
+
+        Map<Double, String> map = new LinkedHashMap<>();
 
         for (double i = 1.0D; i < 4.25D; i += 0.25D) {
             DoubleWrapper doubleWrapper = new DoubleWrapper(0.0D);
@@ -64,11 +79,47 @@ public class StandService {
                                 BooleanMatrix decode = decodeService.decode(matrix, brokenCodeWord, typeOfDecoding);
 
                                 doubleWrapper.setValue(doubleWrapper.getValue() + decodeService.getProbabilityBitsErrorsInformationWord(informationWord, decode));
+
+                                if (dummy % 100 == 0) {
+                                    map.put(signalPower, getReplace(signalPower) + ": " + "(итерация: " + dummy + ") " + getReplace(doubleWrapper.getValue() / (double) dummy) + DELIMITER);
+                                    writeToFile(fileName, matrixParameters + getReduce(map));
+                                }
                             }
                     );
 
             doubleWrapper.setValue(doubleWrapper.getValue() / (double) COUNT_GENERATION);
-            System.out.println(String.valueOf(doubleWrapper.getValue()).replace('.', ','));
+            System.out.println(getReplace(signalPower) + ": " + getReplace(doubleWrapper.getValue()));
+
+            map.put(signalPower, getReplace(signalPower) + ": " + getReplace(doubleWrapper.getValue()) + DELIMITER);
+            writeToFile(fileName, matrixParameters + getReduce(map));
+        }
+    }
+
+    private String getReplace(double d) {
+        return String.valueOf(d).replace('.', ',');
+    }
+
+    private String getName(LDPCEnums.TypeOfDecoding typeOfDecoding) {
+        return typeOfDecoding == null ? "" : typeOfDecoding.name() + "_";
+    }
+
+    private String getName(LDPCEnums.TypeOfChannel typeOfChannel) {
+        return typeOfChannel == null ? "" : typeOfChannel.name() + "_";
+    }
+
+    private String getName(LDPCEnums.TypeOfCoding typeOfCoding) {
+        return typeOfCoding == null ? "" : typeOfCoding.name();
+    }
+
+    private String getReduce(Map<Double, String> map) {
+        return map.values().stream().reduce("", (s, s2) -> s + s2);
+    }
+
+    private void writeToFile(String fileName, String data) {
+        try {
+            Files.write(Paths.get(fileName), data.getBytes(), StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

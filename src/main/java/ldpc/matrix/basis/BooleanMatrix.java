@@ -44,6 +44,6 @@ public class BooleanMatrix {
         String sizeXString = "Size X = " + sizeX;
         String sizeYString = "Size Y = " + sizeY;
         String densityString = "Density = " + density;
-        return String.join("\n---\n", matrixString, sizeXString, sizeYString, densityString);
+        return String.join("\n---\n", sizeXString, sizeYString, densityString);
     }
 }
