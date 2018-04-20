@@ -20,7 +20,8 @@ import java.util.*;
         basePackages = {
                 "ldpc.service",
                 "ldpc.util.service"
-        })
+        }
+)
 public class MainApplicationTest {
 
     @Autowired
@@ -33,23 +34,7 @@ public class MainApplicationTest {
     }
 
     @Test
-    public void sad() throws Exception {
-        Random random = new Random();
-        for (int i = 0; i < 500; i++) {
-            int error = 0;
-            for (int i1 = 0; i1 < 1000; i1++) {
-                double value = random.nextGaussian() * 100.0D + 500.0D;
-                if (isRange(value, 500.0D - (double) i, 500.0D + (double) i)) {
-                    error += 1;
-                }
-            }
-            double x = (double) error / 1000.0D;
-            System.out.println(x);
-        }
-    }
-
-    @Test
-    public void ddddd() throws Exception {
+    public void gaussianError() throws Exception {
         Random random = new Random();
 
         for (int i = 820; i > 810; i--) {
@@ -73,17 +58,7 @@ public class MainApplicationTest {
     }
 
     @Test
-    public void aaaaaa() throws Exception {
-
-        for (double i = 2.0D; i > 0.0D; i -= 0.1D) {
-            System.out.println(i);
-            System.out.println("-----");
-        }
-
-    }
-
-    @Test
-    public void sxsxs() throws Exception {
+    public void gaussianDistribution() throws Exception {
         Map<Double, Integer> map = new HashMap<>();
         Random random = new Random();
         for (int i1 = 0; i1 < 100000; i1++) {
@@ -104,12 +79,8 @@ public class MainApplicationTest {
         );
     }
 
-    public boolean isRange(double value, double left, double right) {
-        return left < value && value < right;
-    }
-
     @Test
-    public void aaa() throws Exception {
+    public void integral() throws Exception {
         for (double i = 0.0D; i < 9.0D; i += 0.25D) {
             System.out.println(i);
             System.out.println(MathUtil.getProbabilityBitErrorBySignal(i));

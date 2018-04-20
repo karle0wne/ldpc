@@ -47,7 +47,7 @@ public class ParityCheckMatrixService {
     }
 
     private ParityCheckMatrix dummy() {
-        return createPreparedParityCheckMatrix12();
+        return createPreparedParityCheckMatrix6_2();
     }
 
     /*
