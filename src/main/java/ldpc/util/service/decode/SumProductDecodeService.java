@@ -33,7 +33,7 @@ public class SumProductDecodeService {
     }
 
     BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
-        TimeLogger timeLogger = new TimeLogger("decode");
+        TimeLogger timeLogger = new TimeLogger("decode", false);
         ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
 
         SoftMetricRepository lMatrix = new SoftMetricRepository();

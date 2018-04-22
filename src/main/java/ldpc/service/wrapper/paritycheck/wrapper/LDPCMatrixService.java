@@ -44,7 +44,7 @@ public class LDPCMatrixService {
          * */
         long k = getK(parityCheckMatrix);
         long j = getJ(parityCheckMatrix);
-        long g = -1/*getG(parityCheckMatrix)*/;
+        long g = getG(parityCheckMatrix);
         ParityCheckMatrix matrix = parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix);
         if (!validate(matrix, k, j)) {
             throw new RuntimeException("Проверьте значения K, J и m*n матрицы!");
@@ -90,7 +90,7 @@ public class LDPCMatrixService {
     }
 
     private int getG(ParityCheckMatrix parityCheckMatrix) {
-        TimeLogger timeLogger = new TimeLogger("LDPCMatrixService.getG");
+        TimeLogger timeLogger = new TimeLogger("LDPCMatrixService.getG", true);
         BooleanMatrix booleanMatrixStart = booleanMatrixService.newMatrix(parityCheckMatrix.getBooleanMatrix());
 
         List<Integer> tierLevels = new ArrayList<>();

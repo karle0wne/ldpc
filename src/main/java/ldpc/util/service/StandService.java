@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 public class StandService {
 
     private static final String DELIMITER = "\n";
-    private static final int COUNT_GENERATION = 10000000;
+    private static final int COUNT_GENERATION = 1000;
     private final BooleanMatrixService booleanMatrixService;
 
     private final GeneratingMatrixService generatingMatrixService;

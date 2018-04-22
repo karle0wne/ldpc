@@ -42,8 +42,8 @@ public class ParityCheckMatrixService {
         }
         switch (typeOfCoding) {
             case GIRTH8:
-                timeLogger = new TimeLogger("generateWithGEight");
-                return generateWithGEight(6, 5);
+                timeLogger = new TimeLogger("generateWithGEight", true);
+                return generateWithGEight(3, 2);
             default:
                 return dummy();
         }

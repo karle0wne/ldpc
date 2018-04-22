@@ -10,12 +10,14 @@ public class TimeLogger {
     private long divDurationTime;
     private String name;
 
-    public TimeLogger(String name) {
+    public TimeLogger(String name, boolean soutStartInfo) {
         this.startFunctionTime = System.currentTimeMillis();
         this.logger = Logger.getLogger(this.getClass().getName());
         this.divDurationTime = 0;
         this.name = name;
-        this.logger.info("Начало работы метода: " + name);
+        if (soutStartInfo) {
+            this.logger.info("Начало работы метода: " + name);
+        }
     }
 
     public void check() {
