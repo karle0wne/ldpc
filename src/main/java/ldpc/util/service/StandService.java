@@ -94,6 +94,8 @@ public class StandService {
             map.put(signalPower, getReplace(signalPower) + ": " + getReplace(doubleWrapper.getValue()) + DELIMITER);
             writeToFile(fileName, matrixParameters + getReduce(map));
         }
+
+        System.out.println("END!");
     }
 
     private void deleteFile(String fileName) {
