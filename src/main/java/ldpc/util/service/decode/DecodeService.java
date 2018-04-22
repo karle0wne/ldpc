@@ -53,6 +53,6 @@ public class DecodeService {
     }
 
     private BooleanMatrix dummy(CodeWord codeWord) {
-        return generatingMatrixService.recoveryBySwapHistory(codeWordService.getBooleanMatrix(codeWord));
+        return generatingMatrixService.recoveryBySwapHistory(codeWordService.getBooleanMatrix(codeWord), false);
     }
 }

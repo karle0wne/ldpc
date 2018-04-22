@@ -9,17 +9,15 @@ import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.basis.ColumnService;
 import ldpc.service.basis.RowService;
 import ldpc.util.template.ColumnPair;
+import ldpc.util.template.TimeLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static ldpc.util.service.decode.SumProductDecodeService.BORDER_ITERATION;
 
 /**
  * Сервис для порождающей матрицы
@@ -49,56 +47,49 @@ public class GeneratingMatrixService {
     * */
     public GeneratingMatrix getGeneratingMatrixFromParityCheckMatrix(ParityCheckMatrix parityCheckMatrix) {
         BooleanMatrix booleanMatrix = booleanMatrixService.newMatrix(parityCheckMatrix.getBooleanMatrix());
-        int iterator = 0;
         List<ColumnPair> swapHistory = new ArrayList<>();
 
-        /*
-        * Получение маски проверки
-        * */
-        Column mask = booleanMatrixService.getMask(booleanMatrix);
+        int i = 0;
+        TimeLogger timeLogger = new TimeLogger("getGeneratingMatrixFromParityCheckMatrix()");
+        while (i < booleanMatrix.getSizeY()) {
+            Column column = columnService.getColumnByIndex(booleanMatrix, i);
 
-        /*
-        * Пока маска проверки не станет полность состоять из false элементов (то есть вся матрица будет преобразована)
-        * */
-        for (int j = 0; !isCorrect(mask) && j < BORDER_ITERATION; j++) {
-            /*
-            * Обновляем маску
-            * */
-            mask = booleanMatrixService.getMask(booleanMatrix);
+            int position = IntStream.range(i, column.getElements().size())
+                    .filter(column::get)
+                    .findFirst()
+                    .orElse(DOES_NOT_EXIST);
 
-            for (int i = 0; i < booleanMatrix.getSizeY(); i++) {
-                Column columnMatrix = columnService.getColumnByIndex(booleanMatrix, i);
+            if (position != DOES_NOT_EXIST) {
+                additionalRowsByPosition(booleanMatrix, column, position);
+                Collections.swap(booleanMatrix.getMatrix(), i, position);
+                i++;
+            } else {
+                final List<Row> matrix = booleanMatrix.getMatrix();
+                final int iterator = i;
+                position = IntStream.range(iterator, booleanMatrix.getSizeX())
+                        .filter(value -> matrix.get(iterator).get(value))
+                        .findFirst()
+                        .orElse(DOES_NOT_EXIST);
 
-                /*
-                * Поиск не преобразованного элемента маски проверки в матрице
-                * */
-                int position = getFirstTruePosition(mask, columnMatrix);
+                if (position == DOES_NOT_EXIST) {
+                    booleanMatrix.getMatrix().remove(iterator);
+                    booleanMatrix = booleanMatrixService.newMatrix(booleanMatrix.getMatrix());
+                } else {
+                    final int swapFrom = position;
 
-                if (position != DOES_NOT_EXIST) {
-                    mask.getElements().set(position, false);
-                    /*
-                    * XOR строк матрицы для столбца
-                    * */
-                    additionalRowsByPosition(booleanMatrix, columnMatrix, position);
+                    IntStream.range(0, booleanMatrix.getSizeY())
+                            .forEach(
+                                    j -> {
+                                        List<Boolean> elements = matrix.get(j).getElements();
+                                        Collections.swap(elements, iterator, swapFrom);
+                                    }
+                            );
+
+                    swapHistory.add(new ColumnPair(iterator, swapFrom));
                 }
             }
-
-            /*
-            * Удаляем пустые строки и удаляем на позиции пустой строки элемент из маски проверки
-            * */
-            removeEmptyRows(booleanMatrix, mask);
-
-            /*
-            * Обновляем параметры, которые рассчитываются при создании, тк матрица изменилась после удаления пустых строк
-            * */
-            booleanMatrix = booleanMatrixService.copyMatrix(booleanMatrix.getMatrix());
-
-            sortedRows(booleanMatrix);
-
-            sortedColumns(booleanMatrix, swapHistory);
+            timeLogger.check();
         }
-
-        checkIterator(iterator);
 
         /*
         * Извлекаем столбцы с зависимыми элементами матрицы (то есть матрица без единичной матричной части)
@@ -116,13 +107,15 @@ public class GeneratingMatrixService {
         /*
         * Восстанавливаем порядок столбцов в порождающей матрице
         * */
-        return newGeneratingMatrix(recoveryBySwapHistory(generatingMatrix.getBooleanMatrix()));
+        return newGeneratingMatrix(recoveryBySwapHistory(generatingMatrix.getBooleanMatrix(), true));
     }
 
-    public BooleanMatrix recoveryBySwapHistory(BooleanMatrix booleanMatrix) {
+    public BooleanMatrix recoveryBySwapHistory(BooleanMatrix booleanMatrix, boolean reverse) {
         List<ColumnPair> swapHistory = new ArrayList<>(getColumnPairs());
         List<Column> matrix = columnService.getAllColumnsByBooleanMatrix(booleanMatrix);
-        Collections.reverse(swapHistory);
+        if (reverse) {
+            Collections.reverse(swapHistory);
+        }
         swapHistory.forEach(
                 columnPair ->
                         Collections.swap(
@@ -146,25 +139,9 @@ public class GeneratingMatrixService {
         this.columnPairs = new ArrayList<>(columnPairs);
     }
 
-    private boolean isCorrect(Column mask) {
-        return booleanMatrixService.getCountTrueElements(mask.getElements()) == 0;
-    }
-
     /*
     * блок внутренних служебных функций
     * */
-    private void checkIterator(int iterator) {
-        if (iterator == BORDER_ITERATION) {
-            throw new RuntimeException("Проверьте валидность проверочной матрицы!");
-        }
-    }
-
-    private int getFirstTruePosition(Column mask, Column columnMatrix) {
-        return IntStream.range(0, mask.getElements().size())
-                .filter(j -> mask.get(j) && columnMatrix.get(j))
-                .findFirst()
-                .orElse(DOES_NOT_EXIST);
-    }
 
     private void additionalRowsByPosition(BooleanMatrix booleanMatrix, Column columnMatrix, int firstTruePosition) {
         List<Integer> changingTruePositions = booleanMatrixService.getPositionsTrueElementsWithoutFirst(columnMatrix.getElements(), firstTruePosition);
@@ -174,52 +151,6 @@ public class GeneratingMatrixService {
             Row changingRow = booleanMatrix.getMatrix().get(changingTruePosition);
             Row resultRow = rowService.newRow(booleanMatrixService.xor(currentRow.getElements(), changingRow.getElements()));
             booleanMatrix.getMatrix().set(changingTruePosition, resultRow);
-        }
-    }
-
-    private void removeEmptyRows(BooleanMatrix booleanMatrix, Column mask) {
-        List<Integer> numberEmptyRows = booleanMatrixService.getNumbersPositionsEmptyRows(booleanMatrix);
-        numberEmptyRows.sort(Comparator.comparing(Integer::intValue).reversed());
-        numberEmptyRows.forEach(
-                numberEmptyRow -> {
-                    booleanMatrix.getMatrix().remove((int) numberEmptyRow);
-                    mask.getElements().remove((int) numberEmptyRow);
-                }
-        );
-    }
-
-    private void sortedRows(BooleanMatrix booleanMatrix) {
-        List<Row> matrix = booleanMatrix.getMatrix();
-        for (int i = 0; i < booleanMatrix.getSizeY(); i++) {
-            Column columnByIndex = columnService.getColumnByIndex(booleanMatrix, i);
-            if (booleanMatrixService.getCountTrueElements(columnByIndex.getElements()) == 1) {
-                if (!matrix.get(i).get(i)) {
-                    Integer indexForSwap = booleanMatrixService.getPositionFirstTrueElement(columnByIndex.getElements(), 0, booleanMatrix.getSizeY());
-                    if (indexForSwap != DOES_NOT_EXIST) {
-                        Collections.swap(matrix, i, indexForSwap);
-                    }
-                }
-            }
-        }
-    }
-
-    private void sortedColumns(BooleanMatrix booleanMatrix, List<ColumnPair> swapHistory) {
-        List<Integer> unsortedRows = getUnsortedRows(booleanMatrix);
-
-        List<Row> matrix = booleanMatrix.getMatrix();
-        for (Integer rowNumber : unsortedRows) {
-            Row row = matrix.get(rowNumber);
-            Integer truePosition = booleanMatrixService.getPositionFirstTrueElement(row.getElements(), rowNumber, booleanMatrix.getSizeX());
-            if (truePosition != DOES_NOT_EXIST) {
-                IntStream.range(0, booleanMatrix.getSizeY())
-                        .forEach(
-                                i -> {
-                                    List<Boolean> elements = matrix.get(i).getElements();
-                                    Collections.swap(elements, rowNumber, truePosition);
-                                }
-                        );
-                swapHistory.add(new ColumnPair(rowNumber, truePosition));
-            }
         }
     }
 

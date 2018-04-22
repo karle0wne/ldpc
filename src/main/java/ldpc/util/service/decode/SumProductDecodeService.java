@@ -9,6 +9,7 @@ import ldpc.util.service.CodeWordService;
 import ldpc.util.template.CodeWord;
 import ldpc.util.template.SoftMetric;
 import ldpc.util.template.SoftMetricRepository;
+import ldpc.util.template.TimeLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +32,8 @@ public class SumProductDecodeService {
         this.generatingMatrixService = generatingMatrixService;
     }
 
-
     BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
+        TimeLogger timeLogger = new TimeLogger("decode");
         ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
 
         SoftMetricRepository lMatrix = new SoftMetricRepository();
@@ -46,6 +47,7 @@ public class SumProductDecodeService {
             lMatrix.clear();
 
             fillLMatrix(codeWord, parityCheckMatrix, lMatrix);
+            timeLogger.check();
 
             if (!zMatrix.isEmpty()) {
                 zMatrix.getMetricsByColumnByRow().forEach(
@@ -60,6 +62,7 @@ public class SumProductDecodeService {
                         }
                 );
             }
+            timeLogger.check();
 
             zMatrix.clear();
 
@@ -84,6 +87,7 @@ public class SumProductDecodeService {
                         );
                     }
             );
+            timeLogger.check();
 
             result.getSoftMetrics().clear();
 
@@ -95,11 +99,12 @@ public class SumProductDecodeService {
                         result.getSoftMetrics().add(codeWord.getSoftMetrics().get(column) + sum);
                     }
             );
+            timeLogger.check();
 
             syndrome = getSyndrome(parityCheckMatrix, codeWordService.newCodeWord(result));
         }
 
-        return generatingMatrixService.recoveryBySwapHistory(codeWordService.getBooleanMatrix(codeWordService.newCodeWord(result)));
+        return generatingMatrixService.recoveryBySwapHistory(codeWordService.getBooleanMatrix(codeWordService.newCodeWord(result)), false);
     }
 
     private Double getHyperbolicArcTan(Double value) {
