@@ -9,6 +9,7 @@ import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.basis.ColumnService;
 import ldpc.service.wrapper.paritycheck.ParityCheckMatrixService;
 import ldpc.util.template.LDPCEnums;
+import ldpc.util.template.TimeLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -89,6 +90,7 @@ public class LDPCMatrixService {
     }
 
     private int getG(ParityCheckMatrix parityCheckMatrix) {
+        TimeLogger timeLogger = new TimeLogger("LDPCMatrixService.getG", true);
         BooleanMatrix booleanMatrixStart = booleanMatrixService.newMatrix(parityCheckMatrix.getBooleanMatrix());
 
         List<Integer> tierLevels = new ArrayList<>();
@@ -103,12 +105,16 @@ public class LDPCMatrixService {
                             BooleanMatrix booleanMatrix = booleanMatrixService.removeColumn(transposedBooleanMatrix, i);
                             int tierLevel;
                             for (tierLevel = 0; !booleanMatrixService.isEmpty(booleanMatrix) && !checkNotUniqueness(columnsForDelete); tierLevel++) {
+                                timeLogger.check();
 
                                 List<Integer> columnsForDeleteForNextTierLevel = getColumnsForDelete(columnsForDelete, booleanMatrix);
+                                timeLogger.check();
 
                                 transposedBooleanMatrix = booleanMatrixService.getTransposedBooleanMatrix(booleanMatrixService.newMatrix(booleanMatrix));
+                                timeLogger.check();
 
                                 booleanMatrix = booleanMatrixService.removeColumns(transposedBooleanMatrix, columnsForDelete);
+                                timeLogger.check();
 
                                 columnsForDelete = new ArrayList<>(columnsForDeleteForNextTierLevel);
                             }
@@ -117,8 +123,10 @@ public class LDPCMatrixService {
                                 int trueTierLevel = (tierLevel + 1) * 2;
                                 tierLevels.add(trueTierLevel);
                             }
+                            timeLogger.check();
                         }
                 );
+        timeLogger.check();
 
         return tierLevels.stream()
                 .min(Comparator.comparing(Integer::intValue))

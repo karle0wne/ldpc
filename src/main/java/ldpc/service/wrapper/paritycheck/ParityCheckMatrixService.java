@@ -6,6 +6,7 @@ import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.basis.RowService;
 import ldpc.util.template.LDPCEnums;
+import ldpc.util.template.TimeLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class ParityCheckMatrixService {
     private final RowService rowService;
 
     private final BooleanMatrixService booleanMatrixService;
+    private TimeLogger timeLogger;
 
     @Autowired
     public ParityCheckMatrixService(RowService rowService, BooleanMatrixService booleanMatrixService) {
@@ -40,6 +42,7 @@ public class ParityCheckMatrixService {
         }
         switch (typeOfCoding) {
             case GIRTH8:
+                timeLogger = new TimeLogger("generateWithGEight", true);
                 return generateWithGEight(3, 2);
             default:
                 return dummy();
@@ -47,7 +50,7 @@ public class ParityCheckMatrixService {
     }
 
     private ParityCheckMatrix dummy() {
-        return createPreparedParityCheckMatrix6_2();
+        return createPreparedParityCheckMatrix6();
     }
 
     /*
@@ -111,7 +114,9 @@ public class ParityCheckMatrixService {
 
     private List<Row> getLDPCBlock(int k, int g, boolean isNotZeroBlock) {
         Stream<Row> firstBlock = isNotZeroBlock ? getBlock(k, g, true) : getBlock(k, g, false);
+        timeLogger.check();
         Stream<Row> secondBlock = isNotZeroBlock ? getLastLine(k, g - 1, true) : getLastLine(k, g - 1, false);
+        timeLogger.check();
         return Stream.concat(firstBlock, secondBlock).collect(Collectors.toList());
     }
 
@@ -126,6 +131,7 @@ public class ParityCheckMatrixService {
                 .mapToObj(j -> getPartOfTheLine(k, g, j, i, isNotZeroBlock))
                 .map(booleanMatrixService::newMatrix)
                 .collect(Collectors.toList());
+        timeLogger.check();
         return mergeLine(line);
     }
 
@@ -133,15 +139,19 @@ public class ParityCheckMatrixService {
         if (g == 2) {
             if (isNotZeroBlock && i == j) {
                 Row row = rowService.newRow(booleanMatrixService.generateElements(k, true));
+                timeLogger.check();
                 return Collections.singletonList(row);
             } else {
                 Row row = rowService.newRow(booleanMatrixService.generateElements(k, false));
+                timeLogger.check();
                 return Collections.singletonList(row);
             }
         } else {
             if (isNotZeroBlock && i == j) {
+                timeLogger.check();
                 return getLDPCBlock(k, g - 1, true);
             } else {
+                timeLogger.check();
                 return getLDPCBlock(k, g - 1, false);
             }
         }
@@ -151,14 +161,17 @@ public class ParityCheckMatrixService {
         List<BooleanMatrix> line = IntStream.range(0, k)
                 .mapToObj(i -> getIdentityMatrix(k, pow, isNotZeroBlock))
                 .collect(Collectors.toList());
+        timeLogger.check();
         return mergeLine(line).stream();
     }
 
     private BooleanMatrix getIdentityMatrix(int k, int pow, boolean isNotZeroBlock) {
         if (isNotZeroBlock) {
+            timeLogger.check();
             return booleanMatrixService.createIdentityMatrix(BigInteger.valueOf(k).pow(pow).intValue());
         } else {
             List<Row> zeroMatrix = booleanMatrixService.createZeroMatrix(BigInteger.valueOf(k).pow(pow).intValue());
+            timeLogger.check();
             return booleanMatrixService.newMatrix(zeroMatrix);
         }
     }

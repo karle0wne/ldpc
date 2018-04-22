@@ -59,6 +59,7 @@ public class StandService {
         System.out.println(generatingMatrixString);
         String matrixParameters = ldpcMatrixString + generatingMatrixString;
 
+        deleteFile(fileName);
         writeToFile(fileName, matrixParameters);
 
         Map<Double, String> map = new LinkedHashMap<>();
@@ -95,12 +96,20 @@ public class StandService {
         }
     }
 
+    private void deleteFile(String fileName) {
+        try {
+            Files.deleteIfExists(Paths.get(fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private String getReplace(double d) {
         return String.valueOf(d).replace('.', ',');
     }
 
     private String getName(LDPCEnums.TypeOfDecoding typeOfDecoding) {
-        return typeOfDecoding == null ? "" : typeOfDecoding.name() + "_";
+        return typeOfDecoding == null ? "" : typeOfDecoding.name();
     }
 
     private String getName(LDPCEnums.TypeOfChannel typeOfChannel) {
@@ -108,7 +117,7 @@ public class StandService {
     }
 
     private String getName(LDPCEnums.TypeOfCoding typeOfCoding) {
-        return typeOfCoding == null ? "" : typeOfCoding.name();
+        return typeOfCoding == null ? "" : typeOfCoding.name() + "_";
     }
 
     private String getReduce(Map<Double, String> map) {
