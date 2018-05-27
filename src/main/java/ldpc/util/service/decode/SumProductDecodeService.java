@@ -14,12 +14,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 @Service
 public class SumProductDecodeService {
 
-    public static final int BORDER_ITERATION = 100;
+    private static final int BORDER_ITERATION = 10;
 
     private final CodeWordService codeWordService;
     private final BooleanMatrixService booleanMatrixService;
@@ -32,7 +33,7 @@ public class SumProductDecodeService {
         this.generatingMatrixService = generatingMatrixService;
     }
 
-    BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
+    BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord, Function<Double, Double> changeValue) {
         TimeLogger timeLogger = new TimeLogger("decode", false);
         ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
 
@@ -69,7 +70,7 @@ public class SumProductDecodeService {
             lMatrix.getMetricsByRowByColumn().forEach(
                     (row, map) -> {
                         double sum = map.values().stream()
-                                .map(softMetric -> getHyperbolicArcTan(softMetric.getMetric()))
+                                .map(softMetric -> changeValue.apply(softMetric.getMetric()))
                                 .mapToDouble(value -> value)
                                 .sum();
 
@@ -80,7 +81,7 @@ public class SumProductDecodeService {
 
                         map.forEach(
                                 (column, softMetric) -> {
-                                    double value = getHyperbolicArcTan(sum - getHyperbolicArcTan(softMetric.getMetric()));
+                                    double value = changeValue.apply(sum - changeValue.apply(softMetric.getMetric()));
                                     double a = signSum * softMetric.getSign();
                                     zMatrix.addMetric(new SoftMetric(column, row, Math.max(Math.min(a * value, 19.07D), -19.07D)));
                                 }
@@ -105,11 +106,6 @@ public class SumProductDecodeService {
         }
 
         return generatingMatrixService.recoveryBySwapHistory(codeWordService.getBooleanMatrix(codeWordService.newCodeWord(result)), false);
-    }
-
-    private Double getHyperbolicArcTan(Double value) {
-        double exp = Math.exp(Math.abs(value));
-        return Math.log((exp + 1) / (exp - 1));
     }
 
     private void fillLMatrix(CodeWord codeWord, ParityCheckMatrix parityCheckMatrix, SoftMetricRepository lMatrix) {

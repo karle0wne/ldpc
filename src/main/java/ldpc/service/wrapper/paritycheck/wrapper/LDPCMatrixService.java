@@ -44,7 +44,8 @@ public class LDPCMatrixService {
          * */
         long k = getK(parityCheckMatrix);
         long j = getJ(parityCheckMatrix);
-        long g = getG(parityCheckMatrix);
+//        long g = getG(parityCheckMatrix);
+        long g = -1;
         ParityCheckMatrix matrix = parityCheckMatrixService.newParityCheckMatrix(parityCheckMatrix);
         if (!validate(matrix, k, j)) {
             throw new RuntimeException("Проверьте значения K, J и m*n матрицы!");

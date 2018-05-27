@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 public class StandService {
 
     private static final String DELIMITER = "\n";
-    private static final int COUNT_GENERATION = 1000;
+    private static final int COUNT_GENERATION = 10;
     private final BooleanMatrixService booleanMatrixService;
 
     private final GeneratingMatrixService generatingMatrixService;
@@ -48,7 +48,7 @@ public class StandService {
     public void stand(LDPCEnums.TypeOfCoding typeOfCoding,
                       LDPCEnums.TypeOfChannel typeOfChannel,
                       LDPCEnums.TypeOfDecoding typeOfDecoding) {
-        String fileName = getName(typeOfCoding) + getName(typeOfChannel) + getName(typeOfDecoding) + ".txt";
+//        String fileName = getName(typeOfCoding) + getName(typeOfChannel) + getName(typeOfDecoding) + ".txt";
 
         StrictLowDensityParityCheckMatrix matrix = ldpcMatrixService.generateLDPCMatrix(typeOfCoding);
         String ldpcMatrixString = matrix.toString() + DELIMITER + DELIMITER;
@@ -57,10 +57,10 @@ public class StandService {
         GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(matrix.getParityCheckMatrix());
         String generatingMatrixString = generatingMatrix.toString() + DELIMITER + DELIMITER;
         System.out.println(generatingMatrixString);
-        String matrixParameters = ldpcMatrixString + generatingMatrixString;
+//        String matrixParameters = ldpcMatrixString + generatingMatrixString;
 
-        deleteFile(fileName);
-        writeToFile(fileName, matrixParameters);
+//        deleteFile(fileName);
+//        writeToFile(fileName, matrixParameters);
 
         Map<Double, String> map = new LinkedHashMap<>();
 
@@ -81,18 +81,18 @@ public class StandService {
 
                                 doubleWrapper.setValue(doubleWrapper.getValue() + decodeService.getProbabilityBitsErrorsInformationWord(informationWord, decode));
 
-                                if (dummy % 100 == 0) {
-                                    map.put(signalPower, getReplace(signalPower) + ": " + "(итерация: " + dummy + ") " + getReplace(doubleWrapper.getValue() / (double) dummy) + DELIMITER);
-                                    writeToFile(fileName, matrixParameters + getReduce(map));
-                                }
+//                                if (dummy % 100 == 0) {
+//                                    map.put(signalPower, getReplace(signalPower) + ": " + "(итерация: " + dummy + ") " + getReplace(doubleWrapper.getValue() / (double) dummy) + DELIMITER);
+//                                    writeToFile(fileName, matrixParameters + getReduce(map));
+//                                }
                             }
                     );
 
             doubleWrapper.setValue(doubleWrapper.getValue() / (double) COUNT_GENERATION);
-            System.out.println(getReplace(signalPower) + ": " + getReplace(doubleWrapper.getValue()));
+            System.out.println(getReplace(signalPower) + ":\t" + getReplace(doubleWrapper.getValue()));
 
-            map.put(signalPower, getReplace(signalPower) + ": " + getReplace(doubleWrapper.getValue()) + DELIMITER);
-            writeToFile(fileName, matrixParameters + getReduce(map));
+//            map.put(signalPower, getReplace(signalPower) + ":\t" + getReplace(doubleWrapper.getValue()) + DELIMITER);
+//            writeToFile(fileName, matrixParameters + getReduce(map));
         }
 
         System.out.println("END!");
