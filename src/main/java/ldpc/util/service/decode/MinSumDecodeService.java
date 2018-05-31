@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 @Service
 public class MinSumDecodeService {
 
-    private static final int BORDER_ITERATION = 100;
+    private static final int BORDER_ITERATION = 10;
 
     private final CodeWordService codeWordService;
     private final BooleanMatrixService booleanMatrixService;
