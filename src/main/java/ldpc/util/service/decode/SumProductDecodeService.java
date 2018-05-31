@@ -88,6 +88,7 @@ public class SumProductDecodeService {
                         );
                     }
             );
+            zMatrix.createMaps();
             timeLogger.check();
 
             result.getSoftMetrics().clear();
@@ -116,6 +117,7 @@ public class SumProductDecodeService {
                             columnIds.forEach(columnId -> lMatrix.addMetric(new SoftMetric(columnId, rowId, codeWord.getSoftMetrics().get(columnId))));
                         }
                 );
+        lMatrix.createMaps();
     }
 
     private boolean isCorrect(BooleanMatrix syndrome) {
