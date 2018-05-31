@@ -20,9 +20,6 @@ public class MainApplication {
         AbstractApplicationContext context = new AnnotationConfigApplicationContext(MainApplication.class);
         StandService bean = context.getBean(StandService.class);
         bean.stand(LDPCEnums.TypeOfCoding.GIRTH8_8_4, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.PRODUCT_SUM);
-        bean.stand(LDPCEnums.TypeOfCoding.GIRTH8_8_4, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.APPROXIMATELY);
-        bean.stand(LDPCEnums.TypeOfCoding.GIRTH8_8_4, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.APPROXIMATELY2);
-        bean.stand(LDPCEnums.TypeOfCoding.GIRTH8_6_5, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.PRODUCT_SUM);
         context.registerShutdownHook();
     }
 }
