@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
 public class StandService {
 
     private static final String DELIMITER = "\n";
-    private static final int COUNT_GENERATION = 10000;
+    private static final int COUNT_GENERATION = 1000;
     private final BooleanMatrixService booleanMatrixService;
 
     private final GeneratingMatrixService generatingMatrixService;
@@ -40,6 +40,8 @@ public class StandService {
         this.decodeService = decodeService;
     }
 
+    // TODO: 01.06.2018 абстракия кодера
+    // TODO: 01.06.2018 использование parity check matirx вместо лдпс 
     public void stand(LDPCEnums.TypeOfCoding typeOfCoding, LDPCEnums.TypeOfChannel typeOfChannel, LDPCEnums.TypeOfDecoding typeOfDecoding) {
         System.out.println(getString(typeOfCoding) + "; " + getString(typeOfChannel) + "; " + getString(typeOfDecoding) + "; " + COUNT_GENERATION + DELIMITER);
         StrictLowDensityParityCheckMatrix matrix = ldpcMatrixService.generateLDPCMatrix(typeOfCoding);
