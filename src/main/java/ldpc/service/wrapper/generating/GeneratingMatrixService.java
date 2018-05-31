@@ -50,7 +50,7 @@ public class GeneratingMatrixService {
         List<ColumnPair> swapHistory = new ArrayList<>();
 
         int i = 0;
-        TimeLogger timeLogger = new TimeLogger("getGeneratingMatrixFromParityCheckMatrix()", true);
+        TimeLogger timeLogger = new TimeLogger("getGeneratingMatrixFromParityCheckMatrix()", false);
         while (i < booleanMatrix.getSizeY()) {
             Column column = columnService.getColumnByIndex(booleanMatrix, i);
 

@@ -13,6 +13,7 @@ import ldpc.util.template.LDPCEnums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 @Service
@@ -39,20 +40,15 @@ public class StandService {
         this.decodeService = decodeService;
     }
 
-    public void stand(LDPCEnums.TypeOfCoding typeOfCoding,
-                      LDPCEnums.TypeOfChannel typeOfChannel,
-                      LDPCEnums.TypeOfDecoding typeOfDecoding) {
-
-        System.out.println(typeOfCoding.toString() + " " + typeOfChannel.toString() + " " + typeOfDecoding.toString() + " " + COUNT_GENERATION);
+    public void stand(LDPCEnums.TypeOfCoding typeOfCoding, LDPCEnums.TypeOfChannel typeOfChannel, LDPCEnums.TypeOfDecoding typeOfDecoding) {
+        System.out.println(getString(typeOfCoding) + "; " + getString(typeOfChannel) + "; " + getString(typeOfDecoding) + "; " + COUNT_GENERATION + DELIMITER);
         StrictLowDensityParityCheckMatrix matrix = ldpcMatrixService.generateLDPCMatrix(typeOfCoding);
-        String ldpcMatrixString = matrix.toString() + DELIMITER + DELIMITER;
-        System.out.println(ldpcMatrixString);
+        System.out.println(matrix.toString() + DELIMITER + DELIMITER);
 
         GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(matrix.getParityCheckMatrix());
-        String generatingMatrixString = generatingMatrix.toString() + DELIMITER + DELIMITER;
-        System.out.println(generatingMatrixString);
+        System.out.println(generatingMatrix.toString() + DELIMITER + DELIMITER);
 
-        for (double i = 1.0D; i < 4.25D; i += 0.25D) {
+        for (double i = 1.0D; i < 3.5D; i += 0.25D) {
             DoubleWrapper doubleWrapper = new DoubleWrapper(0.0D);
 
             double signalPower = i;
@@ -74,8 +70,18 @@ public class StandService {
             doubleWrapper.setValue(doubleWrapper.getValue() / (double) COUNT_GENERATION);
             System.out.println(getReplace(signalPower) + ":\t" + getReplace(doubleWrapper.getValue()));
         }
+    }
 
-        System.out.println("END!");
+    private String getString(LDPCEnums.TypeOfDecoding typeOfDecoding) {
+        return Optional.ofNullable(typeOfDecoding).map(Enum::name).orElse("Отсутствует");
+    }
+
+    private String getString(LDPCEnums.TypeOfChannel typeOfChannel) {
+        return Optional.ofNullable(typeOfChannel).map(Enum::name).orElse("Отсутствует");
+    }
+
+    private String getString(LDPCEnums.TypeOfCoding typeOfCoding) {
+        return Optional.ofNullable(typeOfCoding).map(Enum::name).orElse("Отсутствует");
     }
 
     private String getReplace(double d) {

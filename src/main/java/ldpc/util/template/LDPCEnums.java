@@ -4,8 +4,9 @@ public class LDPCEnums {
 
     public enum TypeOfDecoding {
         PRODUCT_SUM,
-        APPROXIMATELY,
-        APPROXIMATELY2
+        PRODUCT_SUM_APPROXIMATELY,
+        PRODUCT_SUM_APPROXIMATELY2,
+        MIN_SUM
     }
 
     public enum TypeOfCoding {

@@ -30,7 +30,7 @@ public class MainApplicationTest {
 
     @Test
     public void name() throws Exception {
-        standService.stand(null, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.APPROXIMATELY);
+        standService.stand(null, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.PRODUCT_SUM_APPROXIMATELY);
     }
 
     @Test
