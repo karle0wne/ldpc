@@ -49,7 +49,7 @@ public class MainApplicationTest {
                 }
             }
             double v1 = (double) error / (double) border;
-            System.out.println(i + ":\t" + String.valueOf(v1).replace(".", ","));
+            System.out.println(i + ":\t" + getReplace(v1));
         }
     }
 
@@ -57,21 +57,18 @@ public class MainApplicationTest {
     public void gaussianDistribution() throws Exception {
         Map<Double, Integer> map = new HashMap<>();
         Random random = new Random();
-        for (int i1 = 0; i1 < 100000; i1++) {
-            double value = random.nextGaussian() * 2;
-            double v = value * (double) 100;
-            int v1 = (int) v;
-            double v2 = (double) v1 / 10;
-            map.merge(v2, 1, (a, b) -> a + b);
+        for (int i = 0; i < 100000; i++) {
+            double gaussian = random.nextGaussian();
+            double v = 0.4073;
+            double value1 = gaussian * v - 1;
+            double value2 = gaussian * v + 1;
+            map.merge(round(value1, 2), 1, (a, b) -> a + b);
+            map.merge(round(value2, 2), 1, (a, b) -> a + b);
         }
         List<Map.Entry<Double, Integer>> collect = new ArrayList<>(map.entrySet());
         collect.sort(Comparator.comparing(Map.Entry::getKey));
         collect.forEach(
-                doubleIntegerEntry -> System.out.println(doubleIntegerEntry.getKey())
-        );
-        System.out.println("-----------------");
-        collect.forEach(
-                doubleIntegerEntry -> System.out.println(doubleIntegerEntry.getValue())
+                entry -> System.out.println(getReplace(entry.getKey()) + ";\t" + entry.getValue())
         );
     }
 
@@ -95,6 +92,10 @@ public class MainApplicationTest {
         asdAsasd(map);
         asdAsasd2(map);
         asdAsd(map);
+    }
+
+    private String getReplace(double v1) {
+        return String.valueOf(v1).replace(".", ",");
     }
 
     private double round(double value, int places) {
