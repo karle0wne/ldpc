@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -28,6 +30,14 @@ public class MainApplicationTest {
     @Autowired
     private StandService standService;
 
+    private static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
     @Test
     public void name() throws Exception {
         standService.stand(null, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.PRODUCT_SUM_APPROXIMATELY);
@@ -37,23 +47,17 @@ public class MainApplicationTest {
     public void gaussianError() throws Exception {
         Random random = new Random();
 
-        for (int i = 820; i > 810; i--) {
-            double ii = (double) i / (double) 1000;
-            double x = 0;
-            for (int d = 0; d < 100; d++) {
-                int error = 0;
-                for (int i1 = 0; i1 < 100000; i1++) {
-                    double value = random.nextGaussian() * ii - 1;
-                    if (value >= 0) {
-                        error += 1;
-                    }
+        for (double i = 0.408; i >= 0.398; i = round(i - 0.001D, 3)) {
+            int error = 0;
+            int border = 1000000;
+            for (int j = 0; j < border; j++) {
+                double value = random.nextGaussian() * i - 1;
+                if (value >= 0) {
+                    error += 1;
                 }
-                x += (double) error / (double) 100000;
             }
-            double v = x / (double) 100;
-            System.out.println(String.valueOf(ii).replace(".", ","));
-            System.out.println(v);
-            System.out.println("-----");
+            double v1 = (double) error / (double) border;
+            System.out.println(i + ":\t" + String.valueOf(v1).replace(".", ","));
         }
     }
 
@@ -82,8 +86,9 @@ public class MainApplicationTest {
     @Test
     public void integral() throws Exception {
         System.out.println("Eb/N0 | Peb");
-        for (double i = 0.0D; i < 9.0D; i += 0.25D) {
-            System.out.println(i + ":\t" + MathUtil.getProbabilityBitErrorBySignal(i));
+        for (double i = 1.25D; i <= 2.0D; i = round(i + 0.05D, 2)) {
+            double v = 10.0D * Math.log10(i);
+            System.out.println(i + ":\t" + ";\t" + v + ":\t" + MathUtil.getProbabilityBitErrorBySignal(v));
         }
     }
 

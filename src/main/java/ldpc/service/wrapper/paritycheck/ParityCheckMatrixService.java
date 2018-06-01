@@ -108,7 +108,6 @@ public class ParityCheckMatrixService {
         return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
     }
 
-
     private ParityCheckMatrix createPreparedParityCheckMatrix12111() {
         List<Row> matrix = new ArrayList<>();
         matrix.add(rowService.createRow(1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));

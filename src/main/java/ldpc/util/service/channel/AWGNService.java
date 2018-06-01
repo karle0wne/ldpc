@@ -6,7 +6,7 @@ import ldpc.util.template.CodeWord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -14,41 +14,27 @@ import java.util.stream.Collectors;
 
 @Service
 public class AWGNService {
-    private final CodeWordService codeWordService;
 
-    private final Map<Double, Double> gaussianCoefficient = new HashMap<Double, Double>() {{
-        put(0.25D, 1.414);
-        put(0.5D, 1.);
-        put(0.75D, 0.816);
-        put(1D, 0.706);
-        put(1.25D, 0.632);
-        put(1.5D, 0.577);
-        put(1.75D, 0.534);
-        put(2D, 0.499);
-        put(2.25D, 0.471);
-        put(2.5D, 0.447);
-        put(2.75D, 0.426);
-        put(3D, 0.408);
-        put(3.25D, 0.392);
-        put(3.5D, 0.377);
-        put(3.75D, 0.364);
-        put(4D, 0.353);
-        put(4.25D, 0.342);
-        put(4.5D, 0.333);
-        put(4.75D, 0.323);
-        put(5D, 0.315);
-        put(5.25D, 0.306);
-        put(5.5D, 0.299);
-        put(5.75D, 0.292);
-        put(6D, 0.286);
-        put(6.25D, 0.28);
-        put(6.5D, 0.273);
-        put(6.75D, 0.266);
-        put(7D, 0.26);
-        put(7.25D, 0.252);
-        put(7.5D, 0.244);
-        put(7.75D, 0.234);
+    public static final Map<Double, Double> gaussianCoefficient = new LinkedHashMap<Double, Double>() {{
+        put(0.9691001300805642, 0.718);
+        put(1.1394335230683679, 0.662);
+        put(1.3033376849500613, 0.62);
+        put(1.46128035678238, 0.584);
+        put(1.6136800223497487, 0.557);
+        put(1.7609125905568124, 0.533);
+        put(1.903316981702915, 0.512);
+        put(2.041199826559248, 0.493);
+        put(2.1748394421390627, 0.48);
+        put(2.3044892137827393, 0.465);
+        put(2.4303804868629446, 0.454);
+        put(2.5527250510330606, 0.443);
+        put(2.671717284030138, 0.432);
+        put(2.787536009528289, 0.423);
+        put(2.9003461136251802, 0.415);
+        put(3.010299956639812, 0.4073);
     }};
+
+    private final CodeWordService codeWordService;
 
     @Autowired
     public AWGNService(CodeWordService codeWordService) {

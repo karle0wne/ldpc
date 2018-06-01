@@ -6,6 +6,7 @@ import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.wrapper.generating.GeneratingMatrixService;
 import ldpc.service.wrapper.paritycheck.wrapper.LDPCMatrixService;
+import ldpc.util.service.channel.AWGNService;
 import ldpc.util.service.channel.ChannelService;
 import ldpc.util.service.decode.DecodeService;
 import ldpc.util.template.CodeWord;
@@ -41,7 +42,7 @@ public class StandService {
     }
 
     // TODO: 01.06.2018 абстракия кодера
-    // TODO: 01.06.2018 использование parity check matirx вместо лдпс 
+    // TODO: 01.06.2018 использование parity check matirx вместо лдпс
     public void stand(LDPCEnums.TypeOfCoding typeOfCoding, LDPCEnums.TypeOfChannel typeOfChannel, LDPCEnums.TypeOfDecoding typeOfDecoding) {
         System.out.println(getString(typeOfCoding) + "; " + getString(typeOfChannel) + "; " + getString(typeOfDecoding) + "; " + COUNT_GENERATION + DELIMITER);
         StrictLowDensityParityCheckMatrix matrix = ldpcMatrixService.generateLDPCMatrix(typeOfCoding);
@@ -50,7 +51,7 @@ public class StandService {
         GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(matrix.getParityCheckMatrix());
         System.out.println(generatingMatrix.toString() + DELIMITER + DELIMITER);
 
-        for (double i = 1.0D; i < 3.5D; i += 0.25D) {
+        for (Double i : AWGNService.gaussianCoefficient.keySet()) {
             DoubleWrapper doubleWrapper = new DoubleWrapper(0.0D);
 
             double signalPower = i;
@@ -68,6 +69,7 @@ public class StandService {
                                 doubleWrapper.setValue(doubleWrapper.getValue() + decodeService.getProbabilityBitsErrorsInformationWord(informationWord, decode));
                             }
                     );
+
 
             doubleWrapper.setValue(doubleWrapper.getValue() / (double) COUNT_GENERATION);
             System.out.println(getReplace(signalPower) + ":\t" + getReplace(doubleWrapper.getValue()));
