@@ -6,7 +6,7 @@ import static java.lang.Math.*;
 
 public class MathUtil {
 
-    private static final double INCREMENT = 1E-4;
+    private static final double INCREMENT = 1E-5;
     private static final double LIMIT = 8.0D;
     private static final double ONE = 1.0D;
     private static final double TWO = 2.0D;

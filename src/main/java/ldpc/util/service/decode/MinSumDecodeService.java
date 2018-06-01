@@ -14,11 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
 @Service
-public class SumProductDecodeService {
+public class MinSumDecodeService {
 
     private static final int BORDER_ITERATION = 10;
 
@@ -27,13 +26,13 @@ public class SumProductDecodeService {
     private final GeneratingMatrixService generatingMatrixService;
 
     @Autowired
-    public SumProductDecodeService(CodeWordService codeWordService, BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService) {
+    public MinSumDecodeService(CodeWordService codeWordService, BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService) {
         this.codeWordService = codeWordService;
         this.booleanMatrixService = booleanMatrixService;
         this.generatingMatrixService = generatingMatrixService;
     }
 
-    BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord, Function<Double, Double> changeValue) {
+    BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
         TimeLogger timeLogger = new TimeLogger("decode", false);
         ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
 
@@ -69,11 +68,6 @@ public class SumProductDecodeService {
 
             lMatrix.getMetricsByRowByColumn().forEach(
                     (row, map) -> {
-                        double sum = map.values().stream()
-                                .map(softMetric -> changeValue.apply(softMetric.getMetric()))
-                                .mapToDouble(value -> value)
-                                .sum();
-
                         double signSum = map.values().stream()
                                 .map(SoftMetric::getSign)
                                 .reduce((a, b) -> a * b)
@@ -81,7 +75,11 @@ public class SumProductDecodeService {
 
                         map.forEach(
                                 (column, softMetric) -> {
-                                    double value = changeValue.apply(sum - changeValue.apply(softMetric.getMetric()));
+                                    double value = map.values().stream()
+                                            .filter(entry -> entry.getColumn() != column)
+                                            .mapToDouble(SoftMetric::getMetric)
+                                            .min()
+                                            .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
                                     double a = signSum * softMetric.getSign();
                                     zMatrix.addMetric(new SoftMetric(column, row, Math.max(Math.min(a * value, 19.07D), -19.07D)));
                                 }
