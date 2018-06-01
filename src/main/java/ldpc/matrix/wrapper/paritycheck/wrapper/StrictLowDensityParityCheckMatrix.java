@@ -1,32 +1,22 @@
 package ldpc.matrix.wrapper.paritycheck.wrapper;
 
+import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 
 /**
  * Проверочная матрица с малой плотностью проверок на четность
  */
-public class StrictLowDensityParityCheckMatrix {
+public class StrictLowDensityParityCheckMatrix extends ParityCheckMatrix {
 
-    private ParityCheckMatrix parityCheckMatrix;
-    private long K;
-    private long J;
-    private long G;
+    private final long K;
+    private final long J;
+    private final long G;
 
-    /**
-     * @param parityCheckMatrix сама матрица
-     * @param K                 количество единиц в каждой строке
-     * @param J                 количество единиц в каждом столбце
-     * @param G                 обхват графа
-     */
-    public StrictLowDensityParityCheckMatrix(ParityCheckMatrix parityCheckMatrix, long K, long J, long G) {
-        this.parityCheckMatrix = parityCheckMatrix;
-        this.K = K;
-        this.J = J;
-        this.G = G;
-    }
-
-    public ParityCheckMatrix getParityCheckMatrix() {
-        return parityCheckMatrix;
+    public StrictLowDensityParityCheckMatrix(BooleanMatrix booleanMatrix, long k, long j, long g) {
+        super(booleanMatrix);
+        this.K = k;
+        this.J = j;
+        this.G = g;
     }
 
     public long getK() {
@@ -43,7 +33,7 @@ public class StrictLowDensityParityCheckMatrix {
 
     @Override
     public String toString() {
-        String matrix = parityCheckMatrix.toString();
+        String matrix = super.toString();
         String k = "K = " + K;
         String j = "J = " + J;
         String g = "G = " + G;

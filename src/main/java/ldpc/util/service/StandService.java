@@ -2,13 +2,14 @@ package ldpc.util.service;
 
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.wrapper.generating.GeneratingMatrix;
-import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix;
+import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.wrapper.generating.GeneratingMatrixService;
-import ldpc.service.wrapper.paritycheck.wrapper.LDPCMatrixService;
+import ldpc.service.wrapper.paritycheck.ParityCheckMatrixService;
 import ldpc.util.service.channel.AWGNService;
 import ldpc.util.service.channel.ChannelService;
-import ldpc.util.service.decode.DecodeService;
+import ldpc.util.service.coder.EncoderService;
+import ldpc.util.service.decode.DecoderService;
 import ldpc.util.template.CodeWord;
 import ldpc.util.template.LDPCEnums;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,34 +22,37 @@ import java.util.stream.IntStream;
 public class StandService {
 
     private static final String DELIMITER = "\n";
-    private static final int COUNT_GENERATION = 1000;
+    private static final int COUNT_GENERATION = 10000;
+
     private final BooleanMatrixService booleanMatrixService;
 
     private final GeneratingMatrixService generatingMatrixService;
 
-    private final LDPCMatrixService ldpcMatrixService;
+    private final ParityCheckMatrixService parityCheckMatrixService;
 
     private final ChannelService channelService;
 
-    private final DecodeService decodeService;
+    private final DecoderService decoderService;
+
+    private final EncoderService encoderService;
 
     @Autowired
-    public StandService(BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, LDPCMatrixService ldpcMatrixService, ChannelService channelService, DecodeService decodeService) {
+    public StandService(BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, ParityCheckMatrixService parityCheckMatrixService, ChannelService channelService, DecoderService decoderService, EncoderService encoderService) {
         this.booleanMatrixService = booleanMatrixService;
         this.generatingMatrixService = generatingMatrixService;
-        this.ldpcMatrixService = ldpcMatrixService;
+        this.parityCheckMatrixService = parityCheckMatrixService;
         this.channelService = channelService;
-        this.decodeService = decodeService;
+        this.decoderService = decoderService;
+        this.encoderService = encoderService;
     }
 
-    // TODO: 01.06.2018 абстракия кодера
-    // TODO: 01.06.2018 использование parity check matirx вместо лдпс
+
     public void stand(LDPCEnums.TypeOfCoding typeOfCoding, LDPCEnums.TypeOfChannel typeOfChannel, LDPCEnums.TypeOfDecoding typeOfDecoding) {
         System.out.println(getString(typeOfCoding) + "; " + getString(typeOfChannel) + "; " + getString(typeOfDecoding) + "; " + COUNT_GENERATION + DELIMITER);
-        StrictLowDensityParityCheckMatrix matrix = ldpcMatrixService.generateLDPCMatrix(typeOfCoding);
+        ParityCheckMatrix matrix = parityCheckMatrixService.generateParityCheckMatrix(typeOfCoding);
         System.out.println(matrix.toString() + DELIMITER + DELIMITER);
 
-        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(matrix.getParityCheckMatrix());
+        GeneratingMatrix generatingMatrix = generatingMatrixService.getGeneratingMatrixFromParityCheckMatrix(matrix);
         System.out.println(generatingMatrix.toString() + DELIMITER + DELIMITER);
 
         for (Double i : AWGNService.gaussianCoefficient.keySet()) {
@@ -60,16 +64,15 @@ public class StandService {
                             dummy -> {
                                 BooleanMatrix informationWord = booleanMatrixService.generateInfoWord(generatingMatrix.getBooleanMatrix().getSizeY());
 
-                                BooleanMatrix codeWord = booleanMatrixService.multiplicationMatrix(informationWord, generatingMatrix.getBooleanMatrix());
+                                BooleanMatrix codeWord = encoderService.encode(informationWord, generatingMatrix);
 
                                 CodeWord brokenCodeWord = channelService.send(codeWord, typeOfChannel, signalPower);
 
-                                BooleanMatrix decode = decodeService.decode(matrix, brokenCodeWord, typeOfDecoding);
+                                BooleanMatrix decode = decoderService.decode(matrix, brokenCodeWord, typeOfDecoding);
 
-                                doubleWrapper.setValue(doubleWrapper.getValue() + decodeService.getProbabilityBitsErrorsInformationWord(informationWord, decode));
+                                doubleWrapper.setValue(doubleWrapper.getValue() + decoderService.getProbabilityBitsErrorsInformationWord(informationWord, decode));
                             }
                     );
-
 
             doubleWrapper.setValue(doubleWrapper.getValue() / (double) COUNT_GENERATION);
             System.out.println(getReplace(signalPower) + ":\t" + getReplace(doubleWrapper.getValue()));

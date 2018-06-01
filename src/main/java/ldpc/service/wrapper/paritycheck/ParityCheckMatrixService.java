@@ -5,16 +5,13 @@ import ldpc.matrix.basis.Row;
 import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.basis.RowService;
+import ldpc.service.wrapper.paritycheck.wrapper.LDPCMatrixService;
 import ldpc.util.template.LDPCEnums;
-import ldpc.util.template.TimeLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Сервис для проверочной матрицы
@@ -25,12 +22,14 @@ public class ParityCheckMatrixService {
     private final RowService rowService;
 
     private final BooleanMatrixService booleanMatrixService;
-    private TimeLogger timeLogger;
+
+    private final LDPCMatrixService ldpcMatrixService;
 
     @Autowired
-    public ParityCheckMatrixService(RowService rowService, BooleanMatrixService booleanMatrixService) {
+    public ParityCheckMatrixService(RowService rowService, BooleanMatrixService booleanMatrixService, LDPCMatrixService ldpcMatrixService) {
         this.rowService = rowService;
         this.booleanMatrixService = booleanMatrixService;
+        this.ldpcMatrixService = ldpcMatrixService;
     }
 
     /*
@@ -41,12 +40,10 @@ public class ParityCheckMatrixService {
             return dummy();
         }
         switch (typeOfCoding) {
-            case GIRTH8_8_4:
-                timeLogger = new TimeLogger("GIRTH8_8_4", false);
-                return generateWithGEight(8, 4);
-            case GIRTH8_6_5:
-                timeLogger = new TimeLogger("GIRTH8_6_5", false);
-                return generateWithGEight(6, 5);
+            case LDPC_GIRTH8_8_4:
+                return ldpcMatrixService.generateWithGEight(8, 4);
+            case LDPC_GIRTH8_6_5:
+                return ldpcMatrixService.generateWithGEight(6, 5);
             default:
                 return dummy();
         }
@@ -175,118 +172,6 @@ public class ParityCheckMatrixService {
         matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0));
         matrix.add(rowService.createRow(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0));
         return newParityCheckMatrix(booleanMatrixService.newMatrix(matrix));
-    }
-
-    private ParityCheckMatrix generateWithGEight(int k, int g) {
-        if (g > k) {
-            throw new RuntimeException("G должен быть не больше K!");
-        }
-        return newParityCheckMatrix(booleanMatrixService.newMatrix(getLDPCBlock(k, g, true)));
-    }
-
-    private List<Row> getLDPCBlock(int k, int g, boolean isNotZeroBlock) {
-        Stream<Row> firstBlock = isNotZeroBlock ? getBlock(k, g, true) : getBlock(k, g, false);
-        timeLogger.check();
-        Stream<Row> secondBlock = isNotZeroBlock ? getLastLine(k, g - 1, true) : getLastLine(k, g - 1, false);
-        timeLogger.check();
-        return Stream.concat(firstBlock, secondBlock).collect(Collectors.toList());
-    }
-
-    private Stream<Row> getBlock(int k, int g, boolean isNotZeroBlock) {
-        return IntStream.range(0, k)
-                .mapToObj(i -> getLine(k, g, i, isNotZeroBlock))
-                .flatMap(Collection::stream);
-    }
-
-    private List<Row> getLine(int k, int g, int i, boolean isNotZeroBlock) {
-        List<BooleanMatrix> line = IntStream.range(0, k)
-                .mapToObj(j -> getPartOfTheLine(k, g, j, i, isNotZeroBlock))
-                .map(booleanMatrixService::newMatrix)
-                .collect(Collectors.toList());
-        timeLogger.check();
-        return mergeLine(line);
-    }
-
-    private List<Row> getPartOfTheLine(int k, int g, int j, int i, boolean isNotZeroBlock) {
-        if (g == 2) {
-            if (isNotZeroBlock && i == j) {
-                Row row = rowService.newRow(booleanMatrixService.generateElements(k, true));
-                timeLogger.check();
-                return Collections.singletonList(row);
-            } else {
-                Row row = rowService.newRow(booleanMatrixService.generateElements(k, false));
-                timeLogger.check();
-                return Collections.singletonList(row);
-            }
-        } else {
-            if (isNotZeroBlock && i == j) {
-                timeLogger.check();
-                return getLDPCBlock(k, g - 1, true);
-            } else {
-                timeLogger.check();
-                return getLDPCBlock(k, g - 1, false);
-            }
-        }
-    }
-
-    private Stream<Row> getLastLine(int k, int pow, boolean isNotZeroBlock) {
-        List<BooleanMatrix> line = IntStream.range(0, k)
-                .mapToObj(i -> getIdentityMatrix(k, pow, isNotZeroBlock))
-                .collect(Collectors.toList());
-        timeLogger.check();
-        return mergeLine(line).stream();
-    }
-
-    private BooleanMatrix getIdentityMatrix(int k, int pow, boolean isNotZeroBlock) {
-        if (isNotZeroBlock) {
-            timeLogger.check();
-            return booleanMatrixService.createIdentityMatrix(BigInteger.valueOf(k).pow(pow).intValue());
-        } else {
-            List<Row> zeroMatrix = booleanMatrixService.createZeroMatrix(BigInteger.valueOf(k).pow(pow).intValue());
-            timeLogger.check();
-            return booleanMatrixService.newMatrix(zeroMatrix);
-        }
-    }
-
-    private List<Row> mergeLine(List<BooleanMatrix> booleanMatrices) {
-        Integer lineSize = getLineSize(booleanMatrices);
-        return IntStream.range(0, lineSize)
-                .mapToObj(
-                        i -> booleanMatrices.stream()
-                                .flatMap(booleanMatrix -> booleanMatrix.getMatrix().get(i).getElements().stream())
-                                .collect(Collectors.toList())
-                )
-                .map(rowService::newRow)
-                .collect(Collectors.toList());
-    }
-
-    private Integer getLineSize(List<BooleanMatrix> booleanMatrices) {
-        Integer maxX = booleanMatrices.stream()
-                .mapToInt(BooleanMatrix::getSizeX)
-                .max()
-                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
-        Integer minX = booleanMatrices.stream()
-                .mapToInt(BooleanMatrix::getSizeX)
-                .min()
-                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
-
-        Integer maxY = booleanMatrices.stream()
-                .mapToInt(BooleanMatrix::getSizeY)
-                .max()
-                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
-        Integer minY = booleanMatrices.stream()
-                .mapToInt(BooleanMatrix::getSizeY)
-                .min()
-                .orElseThrow(() -> new RuntimeException("Пустая матрица!"));
-
-        if (!Objects.equals(minX, maxX)) {
-            throw new RuntimeException("Ошибка генерации!");
-        }
-
-        if (!Objects.equals(minY, maxY)) {
-            throw new RuntimeException("Ошибка генерации!");
-        }
-        return minY;
     }
 
     /*

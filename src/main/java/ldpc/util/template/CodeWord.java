@@ -15,6 +15,12 @@ public class CodeWord {
         return softMetrics;
     }
 
+    public List<Boolean> getHardMetrics() {
+        return softMetrics.stream()
+                .map(element -> element < 0.0D)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public String toString() {
         return softMetrics.stream()
