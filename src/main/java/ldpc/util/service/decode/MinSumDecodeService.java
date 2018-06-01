@@ -2,7 +2,6 @@ package ldpc.util.service.decode;
 
 import ldpc.matrix.basis.BooleanMatrix;
 import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
-import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.wrapper.generating.GeneratingMatrixService;
 import ldpc.util.service.CodeWordService;
@@ -32,9 +31,8 @@ public class MinSumDecodeService {
         this.generatingMatrixService = generatingMatrixService;
     }
 
-    BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord) {
+    BooleanMatrix decode(ParityCheckMatrix parityCheckMatrix, CodeWord codeWord) {
         TimeLogger timeLogger = new TimeLogger("decode", false);
-        ParityCheckMatrix parityCheckMatrix = matrixLDPC.getParityCheckMatrix();
 
         SoftMetricRepository lMatrix = new SoftMetricRepository();
         SoftMetricRepository zMatrix = new SoftMetricRepository();

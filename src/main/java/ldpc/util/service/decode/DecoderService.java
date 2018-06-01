@@ -1,7 +1,7 @@
 package ldpc.util.service.decode;
 
 import ldpc.matrix.basis.BooleanMatrix;
-import ldpc.matrix.wrapper.paritycheck.wrapper.StrictLowDensityParityCheckMatrix;
+import ldpc.matrix.wrapper.paritycheck.ParityCheckMatrix;
 import ldpc.service.basis.BooleanMatrixService;
 import ldpc.service.wrapper.generating.GeneratingMatrixService;
 import ldpc.util.service.CodeWordService;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
-public class DecodeService {
+public class DecoderService {
 
     private final CodeWordService codeWordService;
     private final BooleanMatrixService booleanMatrixService;
@@ -24,7 +24,7 @@ public class DecodeService {
     private final MinSumDecodeService minSumDecodeService;
 
     @Autowired
-    public DecodeService(CodeWordService codeWordService, BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, SumProductDecodeService sumProductDecodeService, MinSumDecodeService minSumDecodeService) {
+    public DecoderService(CodeWordService codeWordService, BooleanMatrixService booleanMatrixService, GeneratingMatrixService generatingMatrixService, SumProductDecodeService sumProductDecodeService, MinSumDecodeService minSumDecodeService) {
         this.codeWordService = codeWordService;
         this.booleanMatrixService = booleanMatrixService;
         this.generatingMatrixService = generatingMatrixService;
@@ -32,19 +32,19 @@ public class DecodeService {
         this.minSumDecodeService = minSumDecodeService;
     }
 
-    public BooleanMatrix decode(StrictLowDensityParityCheckMatrix matrixLDPC, CodeWord codeWord, LDPCEnums.TypeOfDecoding typeOfDecoding) {
+    public BooleanMatrix decode(ParityCheckMatrix matrix, CodeWord codeWord, LDPCEnums.TypeOfDecoding typeOfDecoding) {
         if (typeOfDecoding == null) {
             return dummy(codeWord);
         }
         switch (typeOfDecoding) {
             case PRODUCT_SUM:
-                return sumProductDecodeService.decode(matrixLDPC, codeWord, this::getHyperbolicArcTan);
+                return sumProductDecodeService.decode(matrix, codeWord, this::getHyperbolicArcTan);
             case PRODUCT_SUM_APPROXIMATELY:
-                return sumProductDecodeService.decode(matrixLDPC, codeWord, this::getApproximately);
+                return sumProductDecodeService.decode(matrix, codeWord, this::getApproximately);
             case PRODUCT_SUM_APPROXIMATELY2:
-                return sumProductDecodeService.decode(matrixLDPC, codeWord, this::getApproximately2);
+                return sumProductDecodeService.decode(matrix, codeWord, this::getApproximately2);
             case MIN_SUM:
-                return minSumDecodeService.decode(matrixLDPC, codeWord);
+                return minSumDecodeService.decode(matrix, codeWord);
             default:
                 return dummy(codeWord);
         }

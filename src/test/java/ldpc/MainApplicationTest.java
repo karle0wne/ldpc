@@ -30,14 +30,6 @@ public class MainApplicationTest {
     @Autowired
     private StandService standService;
 
-    private static double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
-
-        BigDecimal bd = new BigDecimal(value);
-        bd = bd.setScale(places, RoundingMode.HALF_UP);
-        return bd.doubleValue();
-    }
-
     @Test
     public void name() throws Exception {
         standService.stand(null, LDPCEnums.TypeOfChannel.AWGN, LDPCEnums.TypeOfDecoding.PRODUCT_SUM_APPROXIMATELY);
@@ -103,6 +95,14 @@ public class MainApplicationTest {
         asdAsasd(map);
         asdAsasd2(map);
         asdAsd(map);
+    }
+
+    private double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
     private void asdAsasd(Map<Integer, List<Drob>> map) {

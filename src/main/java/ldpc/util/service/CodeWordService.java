@@ -11,9 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
-
-import static java.lang.Math.log;
 
 @Service
 public class CodeWordService {
@@ -28,25 +25,12 @@ public class CodeWordService {
         this.rowService = rowService;
     }
 
-    public double getSoftMetric(Random random, Boolean element) {
-        if (element) {
-            double softMetric = getSoftMetric(random);
-            return log((1 - softMetric) / (softMetric));
-        } else {
-            double softMetric = getSoftMetric(random);
-            return log((softMetric) / (1 - softMetric));
-        }
-    }
-
     public boolean isRange(double value, double left, double right) {
         return left < value && value < right;
     }
 
     public BooleanMatrix getBooleanMatrix(CodeWord codeWord) {
-        List<Boolean> elements = codeWord.getSoftMetrics().stream()
-                .map(this::getBoolean)
-                .collect(Collectors.toList());
-        return booleanMatrixService.newMatrix(Collections.singletonList(rowService.newRow(elements)));
+        return booleanMatrixService.newMatrix(Collections.singletonList(rowService.newRow(codeWord.getHardMetrics())));
     }
 
     public CodeWord newCodeWord(CodeWord codeWord) {
@@ -67,10 +51,6 @@ public class CodeWordService {
             softMetric = random.nextDouble();
         }
         return softMetric;
-    }
-
-    private Boolean getBoolean(Double element) {
-        return element < 0.0D;
     }
 
 }

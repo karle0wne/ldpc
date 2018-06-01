@@ -129,7 +129,7 @@ public class GeneratingMatrixService {
 
     private List<ColumnPair> getColumnPairs() {
         if (columnPairs == null) {
-            throw new NullPointerException("Нет истории перестановок проверочной матрицы!");
+            return new ArrayList<>();
         } else {
             return new ArrayList<>(columnPairs);
         }
